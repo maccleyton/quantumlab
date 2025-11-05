@@ -291,13 +291,15 @@
                 <div class="module-description">Simulações biológicas e processos celulares</div>
             </div>
 
+            <!-- NOVO MÓDULO CÓSMICO -->
             <div class="module-card cosmic" onclick="openModule('cosmico')">
+                <div class="new-badge">NOVO</div>
                 <div class="module-icon">🌠</div>
                 <div class="module-title">Cósmico</div>
                 <div class="module-description">Sistemas estelares, buracos negros e física gravitacional 3D</div>
             </div>
 
-            <div class="module-card" onclick="openModule('editor')">
+            <div class="module-card" onclick="openModule('anotacoes')">
                 <div class="module-icon">📝</div>
                 <div class="module-title">Anotações</div>
                 <div class="module-description">Editor com suporte a Markdown e LaTeX</div>
@@ -307,6 +309,54 @@
         <footer style="text-align: center; padding: 20px; opacity: 0.7;">
             Sistema Integrado de Simulação Científica | Quantum Lab v3.0
         </footer>
+    </div>
+
+    <!-- Modal para Anotações -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('notesModal')">&times;</span>
+            <h2>📝 Editor de Anotações Científicas</h2>
+            
+            <div class="toolbar">
+                <button onclick="insertText('**texto**')">Negrito</button>
+                <button onclick="insertText('*texto*')">Itálico</button>
+                <button onclick="insertText('# Título')">Título</button>
+                <button onclick="insertText('$$E = mc^2$$')">LaTeX</button>
+                <button onclick="insertText('```python\\ncode\\n```')">Código</button>
+                <button onclick="saveNotes()" style="margin-left: auto; background: var(--secondary);">Salvar</button>
+                <button onclick="loadNotes()" style="background: var(--accent);">Carregar</button>
+            </div>
+
+            <div class="notes-container">
+                <textarea id="editor" placeholder="Digite suas anotações científicas aqui...
+
+Exemplo Markdown:
+**Texto em negrito**
+*Texto em itálico*
+
+Exemplo LaTeX:
+$$E = mc^2$$
+$$F = ma$$
+
+Exemplo código:
+```python
+def hello():
+    print('Quantum Lab!')
+```"></textarea>
+                <div id="preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Simulações -->
+    <div id="simulationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('simulationModal')">&times;</span>
+            <h2 id="simulationTitle">Simulação</h2>
+            <div class="simulation-area" id="simulationContent">
+                <!-- Conteúdo da simulação será inserido aqui -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -326,294 +376,61 @@
                 }
             };
         });
-		
-		// Alterações realizadas em 05/11/2025
-		
+
         // Controle de Modais
-		function openModule(module) {
-			if(module === 'anotacoes') {
-				document.getElementById('notesModal').style.display = 'block';
-			} else if(module === 'cosmico') {
-				openCosmicModule();
-			} else if(module === 'termodinamica') {
-				openThermodynamicsModule();
-			} else if(module === 'fisico') {
-				openPhysicalModule();
-			} else if(module === 'organico') {
-				openOrganicModule();
-			} else if(module === 'nuclear') {
-				openNuclearModule();
-			} else if(module === 'quimico') {
-				openChemicalModule();
-			} else if(module === 'biologico') {
-				openBiologicalModule();
-			} else if(module === 'atomico') {
-				openAtomicModule();
-			} else if(module === 'editor') {
-				openEditorModule();
-			} else {
-				alert('Módulo "' + module + '" ainda não implementado.');
-			}
-		}
+        function openModule(module) {
+            if (module === 'anotacoes') {
+                document.getElementById('notesModal').style.display = 'block';
+            } else if (module === 'cosmico') {
+                openCosmicModule();
+            } else {
+                openSimulation(module);
+            }
+        }
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
-		// Módulo Cósmico
-		function openCosmicModule() {
-			const cosmicWindow = window.open('', '_blank');
-			cosmicWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Cósmico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #0a0a1a; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						🌌 Carregando Simulação Cósmica...<br>
-						<small>O módulo cósmico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'cosmic-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
+        // Módulo Cósmico
+        function openCosmicModule() {
+            // Criar uma nova janela ou aba com o módulo cósmico completo
+            const cosmicWindow = window.open('', '_blank');
+            cosmicWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Quantum Lab - Módulo Cósmico</title>
+                    <style>
+                        body { 
+                            margin: 0; 
+                            padding: 20px;
+                            background: #0a0a1a;
+                            color: white;
+                            font-family: Arial, sans-serif;
+                        }
+                        .loading {
+                            text-align: center;
+                            padding: 100px;
+                            font-size: 1.5em;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="loading">
+                        🌌 Carregando Simulação Cósmica...<br>
+                        <small>O módulo cósmico completo está sendo carregado</small>
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            window.location.href = 'cosmic-module.html';
+                        }, 2000);
+                    <\/script>
+                </body>
+                </html>
+            `);
+        }
 
-		// Módulo Termodinâmico
-		function openThermodynamicsModule() {
-			const thermoWindow = window.open('', '_blank');
-			thermoWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Termodinâmica</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #0a1a1a; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						🔥 Carregando Simulação Termodinâmica...<br>
-						<small>O módulo termodinâmico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'thermodynamics-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Físico
-		function openPhysicalModule() {
-			const physicalWindow = window.open('', '_blank');
-			physicalWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Físico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #1a1a0a; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						⚛️ Carregando Simulação Física...<br>
-						<small>O módulo físico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'physical-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Orgânico
-		function openOrganicModule() {
-			const organicWindow = window.open('', '_blank');
-			organicWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Orgânico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #1a0a1a; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						🧪 Carregando Simulação Orgânica...<br>
-						<small>O módulo orgânico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'organic-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Nuclear
-		function openNuclearModule() {
-			const nuclearWindow = window.open('', '_blank');
-			nuclearWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Nuclear</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #101010; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						☢️ Carregando Simulação Nuclear...<br>
-						<small>O módulo nuclear completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'nuclear-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Químico
-		function openChemicalModule() {
-			const chemicalWindow = window.open('', '_blank');
-			chemicalWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Químico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #1a1010; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						⚗️ Carregando Simulação Química...<br>
-						<small>O módulo químico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'chemical-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Biológico
-		function openBiologicalModule() {
-			const biologicalWindow = window.open('', '_blank');
-			biologicalWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Biológico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #0a2010; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						🧬 Carregando Simulação Biológica...<br>
-						<small>O módulo biológico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'biological-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Atômico
-		function openAtomicModule() {
-			const atomicWindow = window.open('', '_blank');
-			atomicWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Módulo Atômico</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #10101a; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						⚛️ Carregando Simulação Atômica...<br>
-						<small>O módulo atômico completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'atomic-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-
-		// Módulo Editor
-		function openEditorModule() {
-			const editorWindow = window.open('', '_blank');
-			editorWindow.document.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<title>Quantum Lab - Editor de Anotações</title>
-					<style>
-						body { margin: 0; padding: 20px; background: #202020; color: white; font-family: Arial, sans-serif; }
-						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
-					</style>
-				</head>
-				<body>
-					<div class="loading">
-						📝 Carregando Editor de Anotações...<br>
-						<small>O editor completo está sendo carregado</small>
-					</div>
-					<script>
-						setTimeout(() => {
-							window.location.href = 'editor-module.html';
-						}, 2000);
-					<\/script>
-				</body>
-				</html>
-			`);
-		}
-		
-		// Fim das alterações
-		
         // Sistema de Anotações
         function updatePreview() {
             const editor = document.getElementById('editor');
