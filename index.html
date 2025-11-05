@@ -291,15 +291,13 @@
                 <div class="module-description">Simulações biológicas e processos celulares</div>
             </div>
 
-            <!-- NOVO MÓDULO CÓSMICO -->
             <div class="module-card cosmic" onclick="openModule('cosmico')">
-                <div class="new-badge">NOVO</div>
                 <div class="module-icon">🌠</div>
                 <div class="module-title">Cósmico</div>
                 <div class="module-description">Sistemas estelares, buracos negros e física gravitacional 3D</div>
             </div>
 
-            <div class="module-card" onclick="openModule('anotacoes')">
+            <div class="module-card" onclick="openModule('editor')">
                 <div class="module-icon">📝</div>
                 <div class="module-title">Anotações</div>
                 <div class="module-description">Editor com suporte a Markdown e LaTeX</div>
@@ -309,54 +307,6 @@
         <footer style="text-align: center; padding: 20px; opacity: 0.7;">
             Sistema Integrado de Simulação Científica | Quantum Lab v3.0
         </footer>
-    </div>
-
-    <!-- Modal para Anotações -->
-    <div id="notesModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('notesModal')">&times;</span>
-            <h2>📝 Editor de Anotações Científicas</h2>
-            
-            <div class="toolbar">
-                <button onclick="insertText('**texto**')">Negrito</button>
-                <button onclick="insertText('*texto*')">Itálico</button>
-                <button onclick="insertText('# Título')">Título</button>
-                <button onclick="insertText('$$E = mc^2$$')">LaTeX</button>
-                <button onclick="insertText('```python\\ncode\\n```')">Código</button>
-                <button onclick="saveNotes()" style="margin-left: auto; background: var(--secondary);">Salvar</button>
-                <button onclick="loadNotes()" style="background: var(--accent);">Carregar</button>
-            </div>
-
-            <div class="notes-container">
-                <textarea id="editor" placeholder="Digite suas anotações científicas aqui...
-
-Exemplo Markdown:
-**Texto em negrito**
-*Texto em itálico*
-
-Exemplo LaTeX:
-$$E = mc^2$$
-$$F = ma$$
-
-Exemplo código:
-```python
-def hello():
-    print('Quantum Lab!')
-```"></textarea>
-                <div id="preview"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Simulações -->
-    <div id="simulationModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('simulationModal')">&times;</span>
-            <h2 id="simulationTitle">Simulação</h2>
-            <div class="simulation-area" id="simulationContent">
-                <!-- Conteúdo da simulação será inserido aqui -->
-            </div>
-        </div>
     </div>
 
     <script>
