@@ -1,20 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quantum Lab - Editor Markdown</title>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-	<script type="text/javascript">
-		window.MathJax = {
-		  tex: {
-			inlineMath: [['$', '$'], ['\\(', '\\)']],
-			displayMath: [['$$', '$$'], ['\\[', '\\]']]
-		  }
-		};
-	</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -27,11 +19,13 @@
             --text: #ffffff;
             --accent: #ff6b00;
         }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
@@ -39,6 +33,7 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -47,12 +42,14 @@
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
+
         .header {
             background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
             padding: 25px;
             text-align: center;
             border-bottom: 3px solid var(--secondary);
         }
+
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
@@ -60,27 +57,25 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .editor-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-			height: 75vh; /* % da altura da janela */
-			min-height: 400px;
+            height: 80vh;
         }
+
         @media (max-width: 968px) {
             .editor-container {
                 grid-template-columns: 1fr;
-				height: auto;
-				min-height: 300px;
+                height: auto;
             }
         }
+
         .editor-panel, .preview-panel {
             padding: 0;
             position: relative;
-			height: 100%;
-			min-height: 200px;
-			display: flex;
-			flex-direction: column;
         }
+
         .panel-header {
             background: var(--darker);
             padding: 15px 20px;
@@ -89,14 +84,15 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .panel-title {
             font-weight: bold;
             color: var(--secondary);
         }
+
         #markdownEditor {
             width: 100%;
-			flex: 1 1 auto;
-			min-height: 0;
+            height: calc(100% - 60px);
             background: var(--darker);
             border: none;
             padding: 20px;
@@ -106,17 +102,16 @@
             line-height: 1.6;
             resize: none;
             outline: none;
-			overflow-y: auto;
         }
+
         #markdownPreview {
-			flex: 1 1 auto;
-			min-height: 0;
+            height: calc(100% - 60px);
             padding: 20px;
             background: var(--darker);
             overflow-y: auto;
-			overflow-x: auto;
             line-height: 1.7;
         }
+
         /* Estilização do Markdown Preview */
         #markdownPreview h1, 
         #markdownPreview h2, 
@@ -126,12 +121,15 @@
             border-bottom: 2px solid var(--primary);
             padding-bottom: 5px;
         }
+
         #markdownPreview h1 { font-size: 2em; }
         #markdownPreview h2 { font-size: 1.6em; }
         #markdownPreview h3 { font-size: 1.3em; }
+
         #markdownPreview p {
             margin: 10px 0;
         }
+
         #markdownPreview code {
             background: rgba(255, 255, 255, 0.1);
             padding: 2px 6px;
@@ -139,6 +137,7 @@
             font-family: 'Fira Code', monospace;
             color: #ff6b6b;
         }
+
         #markdownPreview pre {
             background: #151523;
             padding: 15px;
@@ -147,6 +146,7 @@
             margin: 15px 0;
             border-left: 4px solid var(--accent);
         }
+
         #markdownPreview blockquote {
             border-left: 4px solid var(--primary);
             padding-left: 15px;
@@ -156,28 +156,34 @@
             padding: 10px 15px;
             border-radius: 0 8px 8px 0;
         }
+
         #markdownPreview table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
         }
+
         #markdownPreview th, 
         #markdownPreview td {
             padding: 10px;
             border: 1px solid var(--primary);
             text-align: left;
         }
+
         #markdownPreview th {
             background: var(--primary);
             color: white;
         }
+
         #markdownPreview ul, 
         #markdownPreview ol {
             margin: 10px 0 10px 20px;
         }
+
         #markdownPreview li {
             margin: 5px 0;
         }
+
         .toolbar {
             display: flex;
             gap: 8px;
@@ -186,6 +192,7 @@
             border-bottom: 1px solid var(--primary);
             flex-wrap: wrap;
         }
+
         .toolbar-btn {
             background: var(--primary);
             color: white;
@@ -196,10 +203,12 @@
             font-size: 12px;
             transition: all 0.3s ease;
         }
+
         .toolbar-btn:hover {
             background: var(--secondary);
             transform: translateY(-1px);
         }
+
         .file-controls {
             display: flex;
             gap: 10px;
@@ -208,6 +217,7 @@
             border-top: 1px solid var(--primary);
             justify-content: center;
         }
+
         .file-btn {
             padding: 10px 20px;
             border: none;
@@ -216,27 +226,34 @@
             font-weight: bold;
             transition: all 0.3s ease;
         }
+
         .btn-save {
             background: var(--secondary);
             color: white;
         }
+
         .btn-save:hover {
             background: #7dce5a;
         }
+
         .btn-load {
             background: var(--primary);
             color: white;
         }
+
         .btn-load:hover {
             background: #3a7bbf;
         }
+
         .btn-new {
             background: var(--accent);
             color: white;
         }
+
         .btn-new:hover {
             background: #ff8c42;
         }
+
         .status-bar {
             background: var(--darker);
             padding: 8px 15px;
@@ -261,8 +278,8 @@
             <button class="toolbar-btn" onclick="insertText('## ', '')">Título 2</button>
             <button class="toolbar-btn" onclick="insertText('### ', '')">Título 3</button>
             <button class="toolbar-btn" onclick="insertText('`', '`')">Código</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco Python</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco JS</button>
+            <button class="toolbar-btn" onclick="insertText('```python\n', '\n```')">Bloco Python</button>
+            <button class="toolbar-btn" onclick="insertText('```javascript\n', '\n```')">Bloco JS</button>
             <button class="toolbar-btn" onclick="insertText('- ', '')">Lista</button>
             <button class="toolbar-btn" onclick="insertText('1. ', '')">Lista Num.</button>
             <button class="toolbar-btn" onclick="insertText('> ', '')">Citação</button>
@@ -271,7 +288,6 @@
             <button class="toolbar-btn" onclick="insertText('$$', '$$')">LaTeX Bloco</button>
             <button class="toolbar-btn" onclick="insertText('$', '$')">LaTeX Inline</button>
             <button class="toolbar-btn" onclick="insertText('---\n', '')">Linha</button>
-			<button class="toolbar-btn" onclick="saveMarkdown()">Salvar</button>
         </div>
 
         <div class="editor-container">
@@ -286,8 +302,10 @@
 **Texto em negrito** e *itálico*
 
 ## Código
+```python
 def quantum_state():
-return "Superposição quântica"
+    return \"Superposição quântica\"
+```
 
 Matemática
 
@@ -301,83 +319,7 @@ Listas
 · Item 3
 
 Citação científica interessante..."></textarea>
-            </div>
-            <div class="preview-panel">
-                <div class="panel-header">
-                    <span class="panel-title">👁️ PREVIEW EM TEMPO REAL</span>
-                </div>
-                <div id="markdownPreview"></div>
-            </div>
-        </div>
-    </div>
+</div>
 
-    <script>
-        const editor = document.getElementById('markdownEditor');
-        const preview = document.getElementById('markdownPreview');
-        const charCount = document.getElementById('charCount');
-
-        function updatePreview() {
-            const markdownText = editor.value;
-            preview.innerHTML = marked.parse(markdownText);
-            charCount.textContent = `${markdownText.length} caracteres`;
-
-            // Atualiza o preview do MathJax para renderização das fórmulas LaTeX
-			if (window.MathJax) {
-				setTimeout(() => {
-					MathJax.typesetPromise([preview]).catch((err) => console.error(err.message));
-				}, 0);
-			}
-
-            // Atualiza o highlight.js para realçar código no preview
-            preview.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
-        }
-
-        editor.addEventListener('input', updatePreview);
-
-        window.onload = () => {
-            updatePreview();
-        };
-
-        function insertText(prefix, suffix) {
-            const start = editor.selectionStart;
-            const end = editor.selectionEnd;
-            const text = editor.value;
-
-            const before = text.substring(0, start);
-            const selected = text.substring(start, end);
-            const after = text.substring(end);
-
-            let newText;
-            if (selected.length > 0) {
-                newText = before + prefix + selected + suffix + after;
-            } else {
-                newText = before + prefix + suffix + after;
-            }
-
-            editor.value = newText;
-
-            // Coloca o cursor entre prefixo e sufixo, se o sufixo existir
-            const cursorPos = selected.length > 0 ? end + prefix.length + suffix.length : start + prefix.length;
-            editor.setSelectionRange(cursorPos, cursorPos);
-
-            editor.focus();
-            updatePreview();
-        }
-		
-		function saveMarkdown() {
-			const text = editor.value;
-			const blob = new Blob([text], {type: 'text/markdown'});
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'quantum_lab_markdown.md';
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		}
-    </script>
 </body>
 </html>

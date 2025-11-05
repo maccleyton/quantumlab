@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quantum Lab - Editor Markdown</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Lab - Plataforma Científica</title>
+    <!-- MathJax para renderização LaTeX -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-	<script type="text/javascript">
-		window.MathJax = {
-		  tex: {
-			inlineMath: [['$', '$'], ['\\(', '\\)']],
-			displayMath: [['$$', '$$'], ['\\[', '\\]']]
-		  }
-		};
-	</script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css" />
+    <!-- Highlight.js para syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary: #2b5b84;
@@ -26,358 +19,837 @@
             --light: #2a2a3e;
             --text: #ffffff;
             --accent: #ff6b00;
+            --cosmic: #8a2be2;
         }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
             color: var(--text);
             min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: var(--light);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        }
+
         .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
-            padding: 25px;
             text-align: center;
-            border-bottom: 3px solid var(--secondary);
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+
         .header h1 {
-            font-size: 2.5em;
+            font-size: 3.5em;
             margin-bottom: 10px;
             background: linear-gradient(45deg, var(--secondary), #8dee6a);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .editor-container {
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: var(--light);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+
+        .module-card.cosmic:hover {
+            border-color: var(--cosmic);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.4);
+        }
+
+        .module-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .module-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .module-description {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--cosmic);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--light);
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 2em;
+            cursor: pointer;
+            color: var(--accent);
+        }
+
+        /* Notes Editor */
+        .notes-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-			height: 75vh; /* % da altura da janela */
-			min-height: 400px;
+            gap: 20px;
+            height: 60vh;
         }
-        @media (max-width: 968px) {
-            .editor-container {
-                grid-template-columns: 1fr;
-				height: auto;
-				min-height: 300px;
-            }
-        }
-        .editor-panel, .preview-panel {
-            padding: 0;
-            position: relative;
-			height: 100%;
-			min-height: 200px;
-			display: flex;
-			flex-direction: column;
-        }
-        .panel-header {
+
+        #editor {
             background: var(--darker);
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .panel-title {
-            font-weight: bold;
-            color: var(--secondary);
-        }
-        #markdownEditor {
-            width: 100%;
-			flex: 1 1 auto;
-			min-height: 0;
-            background: var(--darker);
-            border: none;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
             padding: 20px;
             color: var(--text);
-            font-family: 'Fira Code', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
+            font-family: 'Courier New', monospace;
             resize: none;
-            outline: none;
-			overflow-y: auto;
+            font-size: 14px;
         }
-        #markdownPreview {
-			flex: 1 1 auto;
-			min-height: 0;
-            padding: 20px;
+
+        #preview {
             background: var(--darker);
-            overflow-y: auto;
-			overflow-x: auto;
-            line-height: 1.7;
-        }
-        /* Estilização do Markdown Preview */
-        #markdownPreview h1, 
-        #markdownPreview h2, 
-        #markdownPreview h3 {
-            color: var(--secondary);
-            margin: 20px 0 10px 0;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 5px;
-        }
-        #markdownPreview h1 { font-size: 2em; }
-        #markdownPreview h2 { font-size: 1.6em; }
-        #markdownPreview h3 { font-size: 1.3em; }
-        #markdownPreview p {
-            margin: 10px 0;
-        }
-        #markdownPreview code {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Fira Code', monospace;
-            color: #ff6b6b;
-        }
-        #markdownPreview pre {
-            background: #151523;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 15px 0;
-            border-left: 4px solid var(--accent);
-        }
-        #markdownPreview blockquote {
-            border-left: 4px solid var(--primary);
-            padding-left: 15px;
-            margin: 15px 0;
-            color: #cccccc;
-            background: rgba(43, 91, 132, 0.1);
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0;
-        }
-        #markdownPreview table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        #markdownPreview th, 
-        #markdownPreview td {
-            padding: 10px;
             border: 1px solid var(--primary);
-            text-align: left;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
         }
-        #markdownPreview th {
-            background: var(--primary);
-            color: white;
+
+        .latex {
+            color: var(--accent);
+            font-weight: bold;
         }
-        #markdownPreview ul, 
-        #markdownPreview ol {
-            margin: 10px 0 10px 20px;
-        }
-        #markdownPreview li {
-            margin: 5px 0;
-        }
+
         .toolbar {
             display: flex;
-            gap: 8px;
-            padding: 15px;
-            background: var(--darker);
-            border-bottom: 1px solid var(--primary);
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
-        .toolbar-btn {
+
+        .toolbar button {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
+            transition: background 0.3s;
         }
-        .toolbar-btn:hover {
+
+        .toolbar button:hover {
             background: var(--secondary);
-            transform: translateY(-1px);
         }
-        .file-controls {
-            display: flex;
-            gap: 10px;
-            padding: 15px;
+
+        .simulation-area {
             background: var(--darker);
-            border-top: 1px solid var(--primary);
-            justify-content: center;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
         }
-        .file-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .btn-save {
-            background: var(--secondary);
-            color: white;
-        }
-        .btn-save:hover {
-            background: #7dce5a;
-        }
-        .btn-load {
-            background: var(--primary);
-            color: white;
-        }
-        .btn-load:hover {
-            background: #3a7bbf;
-        }
-        .btn-new {
-            background: var(--accent);
-            color: white;
-        }
-        .btn-new:hover {
-            background: #ff8c42;
-        }
-        .status-bar {
-            background: var(--darker);
-            padding: 8px 15px;
+
+        .cosmic-preview {
+            background: linear-gradient(135deg, #0c0c2e 0%, #151523 100%);
+            border: 2px solid var(--cosmic);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
             text-align: center;
-            font-size: 12px;
-            color: #cccccc;
-            border-top: 1px solid var(--primary);
+        }
+
+        .cosmic-preview h4 {
+            color: var(--cosmic);
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .notes-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .modules-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📝 EDITOR MARKDOWN - QUANTUM LAB</h1>
-            <p>Editor científico com suporte a LaTeX, código e exportação</p>
+            <h1>QUANTUM LAB</h1>
+            <p>Plataforma Integrada de Simulação Científica</p>
         </div>
 
-        <div class="toolbar">
-            <button class="toolbar-btn" onclick="insertText('**', '**')">Negrito</button>
-            <button class="toolbar-btn" onclick="insertText('*', '*')">Itálico</button>
-            <button class="toolbar-btn" onclick="insertText('# ', '')">Título 1</button>
-            <button class="toolbar-btn" onclick="insertText('## ', '')">Título 2</button>
-            <button class="toolbar-btn" onclick="insertText('### ', '')">Título 3</button>
-            <button class="toolbar-btn" onclick="insertText('`', '`')">Código</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco Python</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco JS</button>
-            <button class="toolbar-btn" onclick="insertText('- ', '')">Lista</button>
-            <button class="toolbar-btn" onclick="insertText('1. ', '')">Lista Num.</button>
-            <button class="toolbar-btn" onclick="insertText('> ', '')">Citação</button>
-            <button class="toolbar-btn" onclick="insertText('[', '](url)')">Link</button>
-            <button class="toolbar-btn" onclick="insertText('![', '](imagem.jpg)')">Imagem</button>
-            <button class="toolbar-btn" onclick="insertText('$$', '$$')">LaTeX Bloco</button>
-            <button class="toolbar-btn" onclick="insertText('$', '$')">LaTeX Inline</button>
-            <button class="toolbar-btn" onclick="insertText('---\n', '')">Linha</button>
-			<button class="toolbar-btn" onclick="saveMarkdown()">Salvar</button>
-        </div>
-
-        <div class="editor-container">
-            <div class="editor-panel">
-                <div class="panel-header">
-                    <span class="panel-title">📄 EDITOR MARKDOWN</span>
-                    <span id="charCount">0 caracteres</span>
-                </div>
-                <textarea id="markdownEditor" placeholder="Digite seu conteúdo Markdown aqui...
-
-# Exemplo de Título
-**Texto em negrito** e *itálico*
-
-## Código
-def quantum_state():
-return "Superposição quântica"
-
-Matemática
-
-Equação de Schrödinger:
-i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
-
-Listas
-
-· Item 1
-· Item 2
-· Item 3
-
-Citação científica interessante..."></textarea>
+        <div class="modules-grid">
+            <div class="module-card" onclick="openModule('nuclear')">
+                <div class="module-icon">🧪</div>
+                <div class="module-title">Nuclear</div>
+                <div class="module-description">Simulações de reações nucleares e física atômica</div>
             </div>
-            <div class="preview-panel">
-                <div class="panel-header">
-                    <span class="panel-title">👁️ PREVIEW EM TEMPO REAL</span>
-                </div>
-                <div id="markdownPreview"></div>
+
+            <div class="module-card" onclick="openModule('quimico')">
+                <div class="module-icon">⚗️</div>
+                <div class="module-title">Químico</div>
+                <div class="module-description">Reações químicas e tabela periódica</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('organico')">
+                <div class="module-icon">🔬</div>
+                <div class="module-title">Orgânico</div>
+                <div class="module-description">Química orgânica e estruturas moleculares</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('atomico')">
+                <div class="module-icon">⚛️</div>
+                <div class="module-title">Atômico</div>
+                <div class="module-description">Modelos atômicos e mecânica quântica</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('fisico')">
+                <div class="module-icon">🌌</div>
+                <div class="module-title">Físico</div>
+                <div class="module-description">Física clássica e relatividade</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('termodinamica')">
+                <div class="module-icon">🌡️</div>
+                <div class="module-title">Termodinâmica</div>
+                <div class="module-description">Leis da termodinâmica e transferência de calor</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('biologico')">
+                <div class="module-icon">🧬</div>
+                <div class="module-title">Biológico</div>
+                <div class="module-description">Simulações biológicas e processos celulares</div>
+            </div>
+
+            <!-- NOVO MÓDULO CÓSMICO -->
+            <div class="module-card cosmic" onclick="openModule('cosmico')">
+                <div class="new-badge">NOVO</div>
+                <div class="module-icon">🌠</div>
+                <div class="module-title">Cósmico</div>
+                <div class="module-description">Sistemas estelares, buracos negros e física gravitacional 3D</div>
+            </div>
+
+            <div class="module-card" onclick="openModule('editor')">
+                <div class="module-icon">📝</div>
+                <div class="module-title">Anotações</div>
+                <div class="module-description">Editor com suporte a Markdown e LaTeX</div>
+            </div>
+        </div>
+
+        <footer style="text-align: center; padding: 20px; opacity: 0.7;">
+            Sistema Integrado de Simulação Científica | Quantum Lab v3.0
+        </footer>
+    </div>
+
+    <!-- Modal para Anotações -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('notesModal')">&times;</span>
+            <h2>📝 Editor de Anotações Científicas</h2>
+            
+            <div class="toolbar">
+                <button onclick="insertText('**texto**')">Negrito</button>
+                <button onclick="insertText('*texto*')">Itálico</button>
+                <button onclick="insertText('# Título')">Título</button>
+                <button onclick="insertText('$$E = mc^2$$')">LaTeX</button>
+                <button onclick="insertText('```python\\ncode\\n```')">Código</button>
+                <button onclick="saveNotes()" style="margin-left: auto; background: var(--secondary);">Salvar</button>
+                <button onclick="loadNotes()" style="background: var(--accent);">Carregar</button>
+            </div>
+
+            <div class="notes-container">
+                <textarea id="editor" placeholder="Digite suas anotações científicas aqui...
+
+Exemplo Markdown:
+**Texto em negrito**
+*Texto em itálico*
+
+Exemplo LaTeX:
+$$E = mc^2$$
+$$F = ma$$
+
+Exemplo código:
+```python
+def hello():
+    print('Quantum Lab!')
+```"></textarea>
+                <div id="preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Simulações -->
+    <div id="simulationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('simulationModal')">&times;</span>
+            <h2 id="simulationTitle">Simulação</h2>
+            <div class="simulation-area" id="simulationContent">
+                <!-- Conteúdo da simulação será inserido aqui -->
             </div>
         </div>
     </div>
 
     <script>
-        const editor = document.getElementById('markdownEditor');
-        const preview = document.getElementById('markdownPreview');
-        const charCount = document.getElementById('charCount');
-
-        function updatePreview() {
-            const markdownText = editor.value;
-            preview.innerHTML = marked.parse(markdownText);
-            charCount.textContent = `${markdownText.length} caracteres`;
-
-            // Atualiza o preview do MathJax para renderização das fórmulas LaTeX
-			if (window.MathJax) {
-				setTimeout(() => {
-					MathJax.typesetPromise([preview]).catch((err) => console.error(err.message));
-				}, 0);
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            hljs.highlightAll();
+            updatePreview();
+            
+            // Configurar MathJax
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                },
+                svg: {
+                    fontCache: 'global'
+                }
+            };
+        });
+		
+		// Alterações realizadas em 05/11/2025
+		
+        // Controle de Modais
+		function openModule(module) {
+			if(module === 'anotacoes') {
+				document.getElementById('notesModal').style.display = 'block';
+			} else if(module === 'cosmico') {
+				openCosmicModule();
+			} else if(module === 'termodinamica') {
+				openThermodynamicsModule();
+			} else if(module === 'fisico') {
+				openPhysicalModule();
+			} else if(module === 'organico') {
+				openOrganicModule();
+			} else if(module === 'nuclear') {
+				openNuclearModule();
+			} else if(module === 'quimico') {
+				openChemicalModule();
+			} else if(module === 'biologico') {
+				openBiologicalModule();
+			} else if(module === 'atomico') {
+				openAtomicModule();
+			} else if(module === 'editor') {
+				openEditorModule();
+			} else {
+				alert('Módulo "' + module + '" ainda não implementado.');
 			}
+		}
 
-            // Atualiza o highlight.js para realçar código no preview
-            preview.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
-        editor.addEventListener('input', updatePreview);
+		// Módulo Cósmico
+		function openCosmicModule() {
+			const cosmicWindow = window.open('', '_blank');
+			cosmicWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Cósmico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #0a0a1a; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						🌌 Carregando Simulação Cósmica...<br>
+						<small>O módulo cósmico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'cosmic-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
 
-        window.onload = () => {
-            updatePreview();
-        };
+		// Módulo Termodinâmico
+		function openThermodynamicsModule() {
+			const thermoWindow = window.open('', '_blank');
+			thermoWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Termodinâmica</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #0a1a1a; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						🔥 Carregando Simulação Termodinâmica...<br>
+						<small>O módulo termodinâmico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'thermodynamics-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
 
-        function insertText(prefix, suffix) {
+		// Módulo Físico
+		function openPhysicalModule() {
+			const physicalWindow = window.open('', '_blank');
+			physicalWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Físico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #1a1a0a; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						⚛️ Carregando Simulação Física...<br>
+						<small>O módulo físico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'physical-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Orgânico
+		function openOrganicModule() {
+			const organicWindow = window.open('', '_blank');
+			organicWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Orgânico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #1a0a1a; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						🧪 Carregando Simulação Orgânica...<br>
+						<small>O módulo orgânico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'organic-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Nuclear
+		function openNuclearModule() {
+			const nuclearWindow = window.open('', '_blank');
+			nuclearWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Nuclear</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #101010; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						☢️ Carregando Simulação Nuclear...<br>
+						<small>O módulo nuclear completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'nuclear-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Químico
+		function openChemicalModule() {
+			const chemicalWindow = window.open('', '_blank');
+			chemicalWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Químico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #1a1010; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						⚗️ Carregando Simulação Química...<br>
+						<small>O módulo químico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'chemical-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Biológico
+		function openBiologicalModule() {
+			const biologicalWindow = window.open('', '_blank');
+			biologicalWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Biológico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #0a2010; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						🧬 Carregando Simulação Biológica...<br>
+						<small>O módulo biológico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'biological-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Atômico
+		function openAtomicModule() {
+			const atomicWindow = window.open('', '_blank');
+			atomicWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Módulo Atômico</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #10101a; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						⚛️ Carregando Simulação Atômica...<br>
+						<small>O módulo atômico completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'atomic-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+
+		// Módulo Editor
+		function openEditorModule() {
+			const editorWindow = window.open('', '_blank');
+			editorWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>Quantum Lab - Editor de Anotações</title>
+					<style>
+						body { margin: 0; padding: 20px; background: #202020; color: white; font-family: Arial, sans-serif; }
+						.loading { text-align: center; padding: 100px; font-size: 1.5em; }
+					</style>
+				</head>
+				<body>
+					<div class="loading">
+						📝 Carregando Editor de Anotações...<br>
+						<small>O editor completo está sendo carregado</small>
+					</div>
+					<script>
+						setTimeout(() => {
+							window.location.href = 'editor-module.html';
+						}, 2000);
+					<\/script>
+				</body>
+				</html>
+			`);
+		}
+		
+		// Fim das alterações
+		
+        // Sistema de Anotações
+        function updatePreview() {
+            const editor = document.getElementById('editor');
+            const preview = document.getElementById('preview');
+            
+            let content = editor.value;
+            
+            // Processar Markdown básico
+            content = content
+                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="$1">$2</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                .replace(/# (.*)/g, '<h3>$1</h3>')
+                .replace(/\n/g, '<br>');
+            
+            preview.innerHTML = content;
+            
+            // Aplicar syntax highlighting
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+            
+            // Processar MathJax
+            if (window.MathJax) {
+                MathJax.typesetPromise([preview]).catch((err) => console.log(err));
+            }
+        }
+
+        // Inserir texto formatado
+        function insertText(format) {
+            const editor = document.getElementById('editor');
             const start = editor.selectionStart;
             const end = editor.selectionEnd;
-            const text = editor.value;
-
-            const before = text.substring(0, start);
-            const selected = text.substring(start, end);
-            const after = text.substring(end);
-
-            let newText;
-            if (selected.length > 0) {
-                newText = before + prefix + selected + suffix + after;
-            } else {
-                newText = before + prefix + suffix + after;
-            }
-
-            editor.value = newText;
-
-            // Coloca o cursor entre prefixo e sufixo, se o sufixo existir
-            const cursorPos = selected.length > 0 ? end + prefix.length + suffix.length : start + prefix.length;
-            editor.setSelectionRange(cursorPos, cursorPos);
-
+            const selectedText = editor.value.substring(start, end);
+            const replacement = format.replace('texto', selectedText || 'texto');
+            
+            editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
             editor.focus();
             updatePreview();
         }
-		
-		function saveMarkdown() {
-			const text = editor.value;
-			const blob = new Blob([text], {type: 'text/markdown'});
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'quantum_lab_markdown.md';
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		}
+
+        // Salvar/Carregar anotações
+        function saveNotes() {
+            const notes = document.getElementById('editor').value;
+            localStorage.setItem('quantumLabNotes', notes);
+            alert('Anotações salvas com sucesso!');
+        }
+
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('quantumLabNotes');
+            if (savedNotes) {
+                document.getElementById('editor').value = savedNotes;
+                updatePreview();
+                alert('Anotações carregadas!');
+            } else {
+                alert('Nenhuma anotação salva encontrada.');
+            }
+        }
+
+        // Simulações
+        function openSimulation(module) {
+            const title = document.getElementById('simulationTitle');
+            const content = document.getElementById('simulationContent');
+            
+            const simulations = {
+                nuclear: {
+                    title: '🧪 Simulação Nuclear',
+                    content: `<h3>Decaimento Radioativo</h3>
+                    <p>Simulação do decaimento de partículas nucleares:</p>
+                    <p>$$N(t) = N_0 e^{-\\lambda t}$$</p>
+                    <div style="background: #2b5b84; padding: 15px; border-radius: 8px;">
+                        <label>Meia-vida (t½): <input type="range" id="halfLife" min="1" max="100" value="50"></label>
+                        <div id="decayChart" style="height: 200px; background: #1e1e2f; margin-top: 10px; border-radius: 5px;"></div>
+                    </div>`
+                },
+                atomico: {
+                    title: '⚛️ Modelos Atômicos',
+                    content: `<h3>Modelo de Bohr</h3>
+                    <p>Visualize órbitas eletrônicas:</p>
+                    <div style="text-align: center;">
+                        <canvas id="atomCanvas" width="300" height="300" style="border: 1px solid #2b5b84; border-radius: 50%;"></canvas>
+                    </div>
+                    <p>$$E_n = -\\frac{13.6}{n^2} \\text{ eV}$$</p>`
+                },
+                cosmico: {
+                    title: '🌌 Módulo Cósmico',
+                    content: `<h3>Simulação Gravitacional 3D</h3>
+                    <p>Explore sistemas estelares completos com física realista:</p>
+                    <div class="cosmic-preview">
+                        <h4>✨ Recursos do Módulo Cósmico</h4>
+                        <p>• Sistema solar com física gravitacional real</p>
+                        <p>• Buracos negros com efeitos visuais</p>
+                        <p>• Estrelas binárias e sistemas múltiplos</p>
+                        <p>• Experimentos de alteração orbital</p>
+                        <p>• Visualização 3D com Three.js</p>
+                        <button onclick="openCosmicModule()" style="
+                            background: var(--cosmic); 
+                            color: white; 
+                            border: none; 
+                            padding: 10px 20px; 
+                            border-radius: 8px; 
+                            cursor: pointer;
+                            margin-top: 15px;
+                            font-weight: bold;
+                        ">🚀 Abrir Módulo Cósmico Completo</button>
+                    </div>`
+                }
+            };
+
+            const sim = simulations[module] || {
+                title: `Módulo ${module.charAt(0).toUpperCase() + module.slice(1)}`,
+                content: `<p>Simulação do módulo ${module} em desenvolvimento...</p>
+                         <p>Recursos previstos: visualizações interativas, cálculos em tempo real e exportação de dados.</p>`
+            };
+
+            title.innerHTML = sim.title;
+            content.innerHTML = sim.content;
+            document.getElementById('simulationModal').style.display = 'block';
+            
+            // Inicializar simulações específicas
+            if (module === 'atomico') initAtomSimulation();
+            if (module === 'nuclear') initNuclearSimulation();
+        }
+
+        // Simulação atômica (exemplo)
+        function initAtomSimulation() {
+            const canvas = document.getElementById('atomCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            function drawAtom() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Núcleo
+                ctx.fillStyle = '#ff6b00';
+                ctx.beginPath();
+                ctx.arc(150, 150, 20, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Órbitas e elétrons
+                const orbits = [60, 90, 120];
+                orbits.forEach((radius, index) => {
+                    ctx.strokeStyle = '#2b5b84';
+                    ctx.beginPath();
+                    ctx.arc(150, 150, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Elétrons
+                    const angle = Date.now() / 1000 * (index + 1);
+                    const x = 150 + radius * Math.cos(angle);
+                    const y = 150 + radius * Math.sin(angle);
+                    
+                    ctx.fillStyle = '#6cbe45';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                requestAnimationFrame(drawAtom);
+            }
+            
+            drawAtom();
+        }
+
+        function initNuclearSimulation() {
+            // Simulação básica de decaimento
+            const slider = document.getElementById('halfLife');
+            const chart = document.getElementById('decayChart');
+            
+            slider.addEventListener('input', function() {
+                chart.innerHTML = `<div style="padding: 10px; color: #6cbe45;">
+                    Meia-vida selecionada: ${this.value} unidades<br>
+                    Gráfico de decaimento será plotado aqui...
+                </div>`;
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('editor').addEventListener('input', updatePreview);
+
+        // Fechar modal clicando fora
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
