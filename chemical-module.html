@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Lab - Módulo Químico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2b5b84;
+            --secondary: #6cbe45;
+            --dark: #1e1e2f;
+            --darker: #151523;
+            --light: #2a2a3e;
+            --text: #ffffff;
+            --accent: #ff6b00;
+            --acid: #ff4757;
+            --base: #2b5b84;
+            --salt: #6cbe45;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--secondary), #8dee6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chemistry-icon {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 4em;
+            opacity: 0.3;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--light);
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: var(--primary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--light);
+            border-radius: 0 0 15px 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 600px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tabela Periódica */
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            gap: 4px;
+            margin: 20px 0;
+        }
+
+        .element {
+            background: var(--darker);
+            border-radius: 8px;
+            padding: 10px 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .element:hover {
+            transform: scale(1.1);
+            border-color: var(--secondary);
+        }
+
+        .element.selected {
+            border-color: var(--accent);
+            background: var(--primary);
+        }
+
+        .element-symbol {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .element-number {
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        .element-name {
+            font-size: 0.6em;
+            opacity: 0.8;
+        }
+
+        /* Categorias de elementos */
+        .alkali-metal { background: #ff6b6b; }
+        .alkaline-earth { background: #ffa726; }
+        .transition-metal { background: #42a5f5; }
+        .basic-metal { background: #66bb6a; }
+        .semimetal { background: #ab47bc; }
+        .nonmetal { background: #ec407a; }
+        .halogen { background: #ffca28; }
+        .noble-gas { background: #26c6da; }
+        .lanthanide { background: #7e57c2; }
+        .actinide { background: #ef5350; }
+
+        /* Simulador de Reações */
+        .reaction-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .reaction-area {
+            background: var(--darker);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid var(--primary);
+        }
+
+        .molecule-builder {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .formula-input {
+            background: var(--dark);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px;
+            color: var(--text);
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .reaction-equation {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .reaction-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bbf;
+        }
+
+        .btn-acid {
+            background: var(--acid);
+            color: white;
+        }
+
+        .btn-base {
+            background: var(--base);
+            color: white;
+        }
+
+        .btn-salt {
+            background: var(--salt);
+            color: white;
+        }
+
+        /* Visualizador 3D */
+        #moleculeViewer {
+            width: 100%;
+            height: 500px;
+            background: var(--darker);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            background: var(--darker);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .element-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: var(--darker);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .property {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 968px) {
+            .reaction-simulator {
+                grid-template-columns: 1fr;
+            }
+            
+            .periodic-table {
+                grid-template-columns: repeat(9, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="chemistry-icon">⚗️</div>
+            <h1>MÓDULO QUÍMICO</h1>
+            <p>Tabela Periódica Interativa, Simulador de Reações e Visualização 3D Molecular</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="periodic-table">📊 Tabela Periódica</div>
+            <div class="tab" data-tab="reactions">🧪 Simulador de Reações</div>
+            <div class="tab" data-tab="3d-viewer">🔬 Visualizador 3D</div>
+            <div class="tab" data-tab="molecule-builder">⚛️ Construtor Molecular</div>
+        </div>
+
+        <!-- ABA: Tabela Periódica -->
+        <div class="tab-content active" id="periodic-table">
+            <div class="control-group">
+                <h3>Tabela Periódica dos Elementos</h3>
+                <div class="periodic-table" id="periodicTable">
+                    <!-- Elementos serão gerados via JavaScript -->
+                </div>
+            </div>
+
+            <div class="element-info" id="elementInfo">
+                <div class="info-card">
+                    <h4>Informações do Elemento</h4>
+                    <div class="property">
+                        <span>Nome:</span>
+                        <span id="infoName">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Símbolo:</span>
+                        <span id="infoSymbol">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Número Atômico:</span>
+                        <span id="infoNumber">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Massa Atômica:</span>
+                        <span id="infoMass">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4>Propriedades Físicas</h4>
+                    <div class="property">
+                        <span>Estado:</span>
+                        <span id="infoState">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Densidade:</span>
+                        <span id="infoDensity">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Ponto de Fusão:</span>
+                        <span id="infoMelting">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Ponto de Ebulição:</span>
+                        <span id="infoBoiling">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4>Propriedades Químicas</h4>
+                    <div class="property">
+                        <span>Eletronegatividade:</span>
+                        <span id="infoElectronegativity">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Configuração Eletrônica:</span>
+                        <span id="infoConfiguration">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Raio Atômico:</span>
+                        <span id="infoRadius">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Descoberto em:</span>
+                        <span id="infoDiscovered">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Simulador de Reações -->
+        <div class="tab-content" id="reactions">
+            <div class="reaction-simulator">
+                <div class="reaction-area">
+                    <h3>🧪 Simulador de Reações Químicas</h3>
+                    
+                    <div class="molecule-builder">
+                        <input type="text" class="formula-input" id="reactant1" placeholder="Reagente 1 (ex: HCl)" value="HCl">
+                        <input type="text" class="formula-input" id="reactant2" placeholder="Reagente 2 (ex: NaOH)" value="NaOH">
+                        
+                        <div class="reaction-equation" id="reactionEquation">
+                            HCl + NaOH → ?
+                        </div>
+
+                        <div class="reaction-controls">
+                            <button class="btn btn-acid" onclick="balanceEquation()">Balancear Equação</button>
+                            <button class="btn btn-primary" onclick="simulateReaction()">Simular Reação</button>
+                        </div>
+
+                        <div class="reaction-equation" id="reactionResult" style="display: none;">
+                            <!-- Resultado da reação aparecerá aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reaction-area">
+                    <h3>🧴 Tipos de Reações</h3>
+                    
+                    <div class="reaction-controls">
+                        <button class="btn btn-acid" onclick="loadReactionType('acid-base')">Ácido-Base</button>
+                        <button class="btn btn-salt" onclick="loadReactionType('salt-formation')">Formação de Sais</button>
+                        <button class="btn btn-base" onclick="loadReactionType('precipitation')">Precipitação</button>
+                    </div>
+
+                    <div id="reactionExamples">
+                        <h4>Exemplos de Reações:</h4>
+                        <div class="reaction-example" onclick="loadExample('neutralization')">
+                            <strong>Neutralização:</strong> HCl + NaOH → NaCl + H₂O
+                        </div>
+                        <div class="reaction-example" onclick="loadExample('carbonate')">
+                            <strong>Ácido + Carbonato:</strong> 2HCl + CaCO₃ → CaCl₂ + H₂O + CO₂
+                        </div>
+                        <div class="reaction-example" onclick="loadExample('metal')">
+                            <strong>Metal + Ácido:</strong> Zn + 2HCl → ZnCl₂ + H₂
+                        </div>
+                    </div>
+
+                    <div id="reactionInfo" style="margin-top: 20px; padding: 15px; background: var(--darker); border-radius: 10px;">
+                        <h4>Informações da Reação:</h4>
+                        <div id="reactionDetails">
+                            Selecione uma reação para ver os detalhes...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Visualizador 3D -->
+        <div class="tab-content" id="3d-viewer">
+            <div class="control-group">
+                <h3>🔬 Visualizador 3D de Moléculas</h3>
+                <div class="viewer-controls">
+                    <button class="btn btn-primary" onclick="loadMolecule('h2o')">Água (H₂O)</button>
+                    <button class="btn btn-primary" onclick="loadMolecule('co2')">Dióxido de Carbono (CO₂)</button>
+                    <button class="btn btn-primary" onclick="loadMolecule('ch4')">Metano (CH₄)</button>
+                    <button class="btn btn-primary" onclick="loadMolecule('c6h12o6')">Glicose (C₆H₁₂O₆)</button>
+                    <button class="btn btn-primary" onclick="loadMolecule('nacl')">Cloreto de Sódio (NaCl)</button>
+                </div>
+                
+                <div id="moleculeViewer">
+                    <!-- Visualizador 3D será inserido aqui -->
+                </div>
+
+                <div class="molecule-info" style="margin-top: 20px;">
+                    <h4 id="moleculeName">Selecione uma molécula</h4>
+                    <div class="property">
+                        <span>Fórmula Molecular:</span>
+                        <span id="moleculeFormula">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Massa Molar:</span>
+                        <span id="moleculeMass">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Geometria Molecular:</span>
+                        <span id="moleculeGeometry">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Construtor Molecular -->
+        <div class="tab-content" id="molecule-builder">
+            <div class="reaction-simulator">
+                <div class="reaction-area">
+                    <h3>⚛️ Construtor de Moléculas</h3>
+                    
+                    <div class="molecule-builder">
+                        <div class="formula-input" id="moleculeFormulaDisplay">H₂O</div>
+                        
+                        <div class="viewer-controls">
+                            <button class="btn btn-primary" onclick="addAtom('H')">Adicionar H</button>
+                            <button class="btn btn-primary" onclick="addAtom('O')">Adicionar O</button>
+                            <button class="btn btn-primary" onclick="addAtom('C')">Adicionar C</button>
+                            <button class="btn btn-primary" onclick="addAtom('N')">Adicionar N</button>
+                            <button class="btn btn-primary" onclick="clearMolecule()">Limpar</button>
+                        </div>
+
+                        <div id="builderViewer" style="width: 100%; height: 400px; background: var(--darker); border-radius: 10px; margin: 20px 0;">
+                            <!-- Visualizador do construtor -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reaction-area">
+                    <h3>📐 Ferramentas de Construção</h3>
+                    
+                    <div class="control-group">
+                        <h4>Ligações Químicas</h4>
+                        <div class="viewer-controls">
+                            <button class="btn btn-primary" onclick="setBondType('single')">Ligação Simples</button>
+                            <button class="btn btn-primary" onclick="setBondType('double')">Ligação Dupla</button>
+                            <button class="btn btn-primary" onclick="setBondType('triple')">Ligação Tripla</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h4>Informações da Molécula</h4>
+                        <div class="property">
+                            <span>Fórmula:</span>
+                            <span id="builtFormula">H₂O</span>
+                        </div>
+                        <div class="property">
+                            <span>Massa Molar:</span>
+                            <span id="builtMass">18.02 g/mol</span>
+                        </div>
+                        <div class="property">
+                            <span>Número de Átomos:</span>
+                            <span id="atomCount">3</span>
+                        </div>
+                        <div class="property">
+                            <span>Número de Ligações:</span>
+                            <span id="bondCount">2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados da Tabela Periódica
+        const periodicTable = [
+            { number: 1, symbol: "H", name: "Hidrogênio", mass: "1.008", category: "nonmetal", state: "Gasoso", density: "0.0000899", melting: "-259.16", boiling: "-252.87", electronegativity: "2.20", configuration: "1s¹", radius: "53", discovered: "1766" },
+            { number: 2, symbol: "He", name: "Hélio", mass: "4.0026", category: "noble-gas", state: "Gasoso", density: "0.0001785", melting: "-272.20", boiling: "-268.93", electronegativity: "-", configuration: "1s²", radius: "31", discovered: "1868" },
+            { number: 3, symbol: "Li", name: "Lítio", mass: "6.94", category: "alkali-metal", state: "Sólido", density: "0.534", melting: "180.50", boiling: "1342", electronegativity: "0.98", configuration: "[He] 2s¹", radius: "167", discovered: "1817" },
+            { number: 4, symbol: "Be", name: "Berílio", mass: "9.0122", category: "alkaline-earth", state: "Sólido", density: "1.85", melting: "1287", boiling: "2470", electronegativity: "1.57", configuration: "[He] 2s²", radius: "112", discovered: "1797" },
+            { number: 5, symbol: "B", name: "Boro", mass: "10.81", category: "semimetal", state: "Sólido", density: "2.34", melting: "2075", boiling: "4000", electronegativity: "2.04", configuration: "[He] 2s² 2p¹", radius: "87", discovered: "1808" },
+            { number: 6, symbol: "C", name: "Carbono", mass: "12.011", category: "nonmetal", state: "Sólido", density: "2.267", melting: "3550", boiling: "4027", electronegativity: "2.55", configuration: "[He] 2s² 2p²", radius: "67", discovered: "Antiguidade" },
+            { number: 7, symbol: "N", name: "Nitrogênio", mass: "14.007", category: "nonmetal", state: "Gasoso", density: "0.001251", melting: "-210.00", boiling: "-195.79", electronegativity: "3.04", configuration: "[He] 2s² 2p³", radius: "56", discovered: "1772" },
+            { number: 8, symbol: "O", name: "Oxigênio", mass: "15.999", category: "nonmetal", state: "Gasoso", density: "0.001429", melting: "-218.79", boiling: "-182.95", electronegativity: "3.44", configuration: "[He] 2s² 2p⁴", radius: "48", discovered: "1774" },
+            { number: 9, symbol: "F", name: "Flúor", mass: "18.998", category: "halogen", state: "Gasoso", density: "0.001696", melting: "-219.67", boiling: "-188.11", electronegativity: "3.98", configuration: "[He] 2s² 2p⁵", radius: "42", discovered: "1886" },
+            { number: 10, symbol: "Ne", name: "Neônio", mass: "20.180", category: "noble-gas", state: "Gasoso", density: "0.0008999", melting: "-248.59", boiling: "-246.08", electronegativity: "-", configuration: "[He] 2s² 2p⁶", radius: "38", discovered: "1898" },
+            { number: 11, symbol: "Na", name: "Sódio", mass: "22.990", category: "alkali-metal", state: "Sólido", density: "0.971", melting: "97.72", boiling: "883", electronegativity: "0.93", configuration: "[Ne] 3s¹", radius: "190", discovered: "1807" },
+            { number: 12, symbol: "Mg", name: "Magnésio", mass: "24.305", category: "alkaline-earth", state: "Sólido", density: "1.738", melting: "650", boiling: "1090", electronegativity: "1.31", configuration: "[Ne] 3s²", radius: "145", discovered: "1755" },
+            { number: 13, symbol: "Al", name: "Alumínio", mass: "26.982", category: "basic-metal", state: "Sólido", density: "2.698", melting: "660.32", boiling: "2519", electronegativity: "1.61", configuration: "[Ne] 3s² 3p¹", radius: "118", discovered: "1825" },
+            { number: 14, symbol: "Si", name: "Silício", mass: "28.085", category: "semimetal", state: "Sólido", density: "2.3296", melting: "1414", boiling: "3265", electronegativity: "1.90", configuration: "[Ne] 3s² 3p²", radius: "111", discovered: "1824" },
+            { number: 15, symbol: "P", name: "Fósforo", mass: "30.974", category: "nonmetal", state: "Sólido", density: "1.82", melting: "44.15", boiling: "280.5", electronegativity: "2.19", configuration: "[Ne] 3s² 3p³", radius: "98", discovered: "1669" },
+            { number: 16, symbol: "S", name: "Enxofre", mass: "32.06", category: "nonmetal", state: "Sólido", density: "2.067", melting: "115.21", boiling: "444.72", electronegativity: "2.58", configuration: "[Ne] 3s² 3p⁴", radius: "88", discovered: "Antiguidade" },
+            { number: 17, symbol: "Cl", name: "Cloro", mass: "35.45", category: "halogen", state: "Gasoso", density: "0.003214", melting: "-101.5", boiling: "-34.04", electronegativity: "3.16", configuration: "[Ne] 3s² 3p⁵", radius: "79", discovered: "1774" },
+            { number: 18, symbol: "Ar", name: "Argônio", mass: "39.948", category: "noble-gas", state: "Gasoso", density: "0.001784", melting: "-189.34", boiling: "-185.85", electronegativity: "-", configuration: "[Ne] 3s² 3p⁶", radius: "71", discovered: "1894" }
+        ];
+
+        // Dados das Moléculas
+        const molecules = {
+            'h2o': {
+                name: 'Água',
+                formula: 'H₂O',
+                mass: '18.02 g/mol',
+                geometry: 'Angular',
+                atoms: [
+                    { element: 'O', x: 0, y: 0, z: 0 },
+                    { element: 'H', x: 0.757, y: 0.586, z: 0 },
+                    { element: 'H', x: -0.757, y: 0.586, z: 0 }
+                ],
+                bonds: [
+                    { from: 0, to: 1, type: 'single' },
+                    { from: 0, to: 2, type: 'single' }
+                ]
+            },
+            'co2': {
+                name: 'Dióxido de Carbono',
+                formula: 'CO₂',
+                mass: '44.01 g/mol',
+                geometry: 'Linear',
+                atoms: [
+                    { element: 'C', x: 0, y: 0, z: 0 },
+                    { element: 'O', x: 1.16, y: 0, z: 0 },
+                    { element: 'O', x: -1.16, y: 0, z: 0 }
+                ],
+                bonds: [
+                    { from: 0, to: 1, type: 'double' },
+                    { from: 0, to: 2, type: 'double' }
+                ]
+            },
+            'ch4': {
+                name: 'Metano',
+                formula: 'CH₄',
+                mass: '16.04 g/mol',
+                geometry: 'Tetraédrica',
+                atoms: [
+                    { element: 'C', x: 0, y: 0, z: 0 },
+                    { element: 'H', x: 0.629, y: 0.629, z: 0.629 },
+                    { element: 'H', x: -0.629, y: -0.629, z: 0.629 },
+                    { element: 'H', x: -0.629, y: 0.629, z: -0.629 },
+                    { element: 'H', x: 0.629, y: -0.629, z: -0.629 }
+                ],
+                bonds: [
+                    { from: 0, to: 1, type: 'single' },
+                    { from: 0, to: 2, type: 'single' },
+                    { from: 0, to: 3, type: 'single' },
+                    { from: 0, to: 4, type: 'single' }
+                ]
+            }
+        };
+
+        // Variáveis globais
+        let currentElement = null;
+        let scene, camera, renderer, controls;
+        let currentMolecule = null;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePeriodicTable();
+            initializeTabs();
+            initialize3DViewer();
+            initializeMoleculeBuilder();
+        });
+
+        // Sistema de Abas
+        function initializeTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // Remover classe active de todas as abas e conteúdos
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Adicionar classe active à aba e conteúdo selecionados
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // Tabela Periódica
+        function initializePeriodicTable() {
+            const table = document.getElementById('periodicTable');
+            
+            periodicTable.forEach(element => {
+                const elementDiv = document.createElement('div');
+                elementDiv.className = `element ${element.category}`;
+                elementDiv.innerHTML = `
+                    <div class="element-number">${element.number}</div>
+                    <div class="element-symbol">${element.symbol}</div>
+                    <div class="element-name">${element.name}</div>
+                `;
+                
+                elementDiv.addEventListener('click', () => showElementInfo(element));
+                table.appendChild(elementDiv);
+            });
+        }
+
+        function showElementInfo(element) {
+            currentElement = element;
+            
+            // Atualizar informações
+            document.getElementById('infoName').textContent = element.name;
+            document.getElementById('infoSymbol').textContent = element.symbol;
+            document.getElementById('infoNumber').textContent = element.number;
+            document.getElementById('infoMass').textContent = element.mass;
+            document.getElementById('infoState').textContent = element.state;
+            document.getElementById('infoDensity').textContent = element.density + (element.state === 'Gasoso' ? ' g/cm³' : ' g/cm³');
+            document.getElementById('infoMelting').textContent = element.melting + ' °C';
+            document.getElementById('infoBoiling').textContent = element.boiling + ' °C';
+            document.getElementById('infoElectronegativity').textContent = element.electronegativity;
+            document.getElementById('infoConfiguration').textContent = element.configuration;
+            document.getElementById('infoRadius').textContent = element.radius + ' pm';
+            document.getElementById('infoDiscovered').textContent = element.discovered;
+            
+            // Destacar elemento selecionado
+            document.querySelectorAll('.element').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        // Simulador de Reações
+        function balanceEquation() {
+            const reactant1 = document.getElementById('reactant1').value;
+            const reactant2 = document.getElementById('reactant2').value;
+            
+            // Simulação simples de balanceamento
+            const equations = {
+                'HCl+NaOH': 'HCl + NaOH → NaCl + H₂O',
+                'H2SO4+NaOH': 'H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O',
+                'HCl+CaCO3': '2HCl + CaCO₃ → CaCl₂ + H₂O + CO₂',
+                'Zn+HCl': 'Zn + 2HCl → ZnCl₂ + H₂'
+            };
+            
+            const key = reactant1 + '+' + reactant2;
+            const equation = equations[key] || `${reactant1} + ${reactant2} → Produtos`;
+            
+            document.getElementById('reactionEquation').textContent = equation;
+        }
+
+        function simulateReaction() {
+            const reactant1 = document.getElementById('reactant1').value;
+            const reactant2 = document.getElementById('reactant2').value;
+            
+            // Simulação de reações comuns
+            const reactions = {
+                'HCl+NaOH': {
+                    equation: 'HCl + NaOH → NaCl + H₂O',
+                    type: 'Neutralização Ácido-Base',
+                    description: 'Reação de neutralização formando sal e água. Reação exotérmica.',
+                    products: ['NaCl (cloreto de sódio)', 'H₂O (água)']
+                },
+                'H2SO4+NaOH': {
+                    equation: 'H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O',
+                    type: 'Neutralização Ácido-Base',
+                    description: 'Reação de neutralização com ácido diprótico.',
+                    products: ['Na₂SO₄ (sulfato de sódio)', 'H₂O (água)']
+                }
+            };
+            
+            const key = reactant1 + '+' + reactant2;
+            const reaction = reactions[key];
+            
+            if (reaction) {
+                document.getElementById('reactionResult').innerHTML = `
+                    <strong>Equação Balanceada:</strong> ${reaction.equation}<br>
+                    <strong>Tipo:</strong> ${reaction.type}<br>
+                    <strong>Descrição:</strong> ${reaction.description}<br>
+                    <strong>Produtos:</strong> ${reaction.products.join(', ')}
+                `;
+                document.getElementById('reactionResult').style.display = 'block';
+            } else {
+                document.getElementById('reactionResult').innerHTML = `
+                    <strong>Reação não reconhecida.</strong><br>
+                    Tente: HCl + NaOH ou H₂SO₄ + NaOH
+                `;
+                document.getElementById('reactionResult').style.display = 'block';
+            }
+        }
+
+        function loadReactionType(type) {
+            const examples = {
+                'acid-base': 'Exemplos de Reações Ácido-Base: HCl + NaOH, H₂SO₄ + KOH',
+                'salt-formation': 'Formação de Sais: AgNO₃ + NaCl → AgCl + NaNO₃',
+                'precipitation': 'Reações de Precipitação: Pb(NO₃)₂ + 2KI → PbI₂ + 2KNO₃'
+            };
+            
+            document.getElementById('reactionDetails').textContent = examples[type] || 'Selecione um tipo de reação.';
+        }
+
+        function loadExample(example) {
+            const examples = {
+                'neutralization': {
+                    reactants: ['HCl', 'NaOH'],
+                    details: 'Reação de neutralização completa entre ácido forte e base forte.'
+                },
+                'carbonate': {
+                    reactants: ['HCl', 'CaCO3'],
+                    details: 'Ácido reagindo com carbonato, liberando CO₂ gasoso.'
+                },
+                'metal': {
+                    reactants: ['Zn', 'HCl'],
+                    details: 'Metal reagindo com ácido, liberando gás hidrogênio.'
+                }
+            };
+            
+            const ex = examples[example];
+            if (ex) {
+                document.getElementById('reactant1').value = ex.reactants[0];
+                document.getElementById('reactant2').value = ex.reactants[1];
+                document.getElementById('reactionDetails').textContent = ex.details;
+                balanceEquation();
+            }
+        }
+
+        // Visualizador 3D
+        function initialize3DViewer() {
+            const container = document.getElementById('moleculeViewer');
+            
+            // Cena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e1e2f);
+            
+            // Câmera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Luz
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            // Animação
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // Redimensionamento
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            // Carregar molécula inicial
+            loadMolecule('h2o');
+        }
+
+        function loadMolecule(moleculeKey) {
+            const molecule = molecules[moleculeKey];
+            if (!molecule) return;
+            
+            currentMolecule = molecule;
+            
+            // Limpar cena
+            while(scene.children.length > 0) { 
+                scene.remove(scene.children[0]); 
+            }
+            
+            // Recriar luz
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            // Cores dos átomos
+            const atomColors = {
+                'H': 0xffffff,    // Branco
+                'O': 0xff0000,    // Vermelho
+                'C': 0x333333,    // Cinza escuro
+                'N': 0x0000ff,    // Azul
+                'Cl': 0x00ff00    // Verde
+            };
+            
+            // Tamanhos dos átomos (escala)
+            const atomSizes = {
+                'H': 0.3,
+                'O': 0.6,
+                'C': 0.7,
+                'N': 0.65,
+                'Cl': 0.8
+            };
+            
+            // Adicionar átomos
+            molecule.atoms.forEach((atom, index) => {
+                const geometry = new THREE.SphereGeometry(atomSizes[atom.element] || 0.5, 32, 32);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: atomColors[atom.element] || 0x888888 
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set(atom.x * 2, atom.y * 2, atom.z * 2);
+                scene.add(sphere);
+                
+                // Adicionar label (simplificado)
+                // Na implementação real, usar THREE.Sprite ou canvas para textos
+            });
+            
+            // Adicionar ligações
+            molecule.bonds.forEach(bond => {
+                const atom1 = molecule.atoms[bond.from];
+                const atom2 = molecule.atoms[bond.to];
+                
+                const start = new THREE.Vector3(atom1.x * 2, atom1.y * 2, atom1.z * 2);
+                const end = new THREE.Vector3(atom2.x * 2, atom2.y * 2, atom2.z * 2);
+                
+                const distance = start.distanceTo(end);
+                const direction = new THREE.Vector3().subVectors(end, start).normalize();
+                
+                const geometry = new THREE.CylinderGeometry(0.1, 0.1, distance, 8);
+                const material = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+                const cylinder = new THREE.Mesh(geometry, material);
+                
+                // Posicionar e orientar o cilindro
+                cylinder.position.copy(start).add(direction.clone().multiplyScalar(distance / 2));
+                cylinder.lookAt(end);
+                cylinder.rotateX(Math.PI / 2);
+                
+                scene.add(cylinder);
+            });
+            
+            // Atualizar informações
+            document.getElementById('moleculeName').textContent = molecule.name;
+            document.getElementById('moleculeFormula').textContent = molecule.formula;
+            document.getElementById('moleculeMass').textContent = molecule.mass;
+            document.getElementById('moleculeGeometry').textContent = molecule.geometry;
+        }
+
+        // Construtor Molecular (simplificado)
+        function initializeMoleculeBuilder() {
+            // Implementação básica - versão completa exigiria mais desenvolvimento
+            console.log("Construtor molecular inicializado");
+        }
+
+        function addAtom(element) {
+            // Simulação - versão real implementaria adição visual de átomos
+            alert(`Átomo de ${element} adicionado ao construtor`);
+        }
+
+        function setBondType(type) {
+            const types = {
+                'single': 'Ligação Simples',
+                'double': 'Ligação Dupla', 
+                'triple': 'Ligação Tripla'
+            };
+            alert(`${types[type]} selecionada`);
+        }
+
+        function clearMolecule() {
+            alert('Molécula limpa');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Lab - Módulo Orgânico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary: #2b5b84;
+            --secondary: #6cbe45;
+            --dark: #1e1e2f;
+            --darker: #151523;
+            --light: #2a2a3e;
+            --text: #ffffff;
+            --accent: #ff6b00;
+            --alkane: #6cbe45;
+            --alkene: #ffa726;
+            --alkyne: #ff4757;
+            --alcohol: #2b5b84;
+            --acid: #ab47bc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--secondary), #8dee6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .organic-icon {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 4em;
+            opacity: 0.3;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--light);
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: var(--primary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--light);
+            border-radius: 0 0 15px 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 600px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Hidrocarbonetos */
+        .hydrocarbon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .hydrocarbon-card {
+            background: var(--darker);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .hydrocarbon-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+        }
+
+        .hydrocarbon-card.alkane { border-left: 4px solid var(--alkane); }
+        .hydrocarbon-card.alkene { border-left: 4px solid var(--alkene); }
+        .hydrocarbon-card.alkyne { border-left: 4px solid var(--alkyne); }
+
+        .hydrocarbon-formula {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .hydrocarbon-name {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        /* Grupos Funcionais */
+        .functional-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .functional-group {
+            background: var(--darker);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .functional-group:hover {
+            border-color: var(--accent);
+        }
+
+        .group-formula {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+
+        .group-name {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        /* Visualizador 3D */
+        #moleculeViewer {
+            width: 100%;
+            height: 500px;
+            background: var(--darker);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            margin: 20px 0;
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a7bbf;
+        }
+
+        .btn-alkane {
+            background: var(--alkane);
+            color: white;
+        }
+
+        .btn-alkene {
+            background: var(--alkene);
+            color: white;
+        }
+
+        .btn-alkyne {
+            background: var(--alkyne);
+            color: white;
+        }
+
+        .btn-alcohol {
+            background: var(--alcohol);
+            color: white;
+        }
+
+        .btn-acid {
+            background: var(--acid);
+            color: white;
+        }
+
+        .control-group {
+            background: var(--darker);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .molecule-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: var(--dark);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .property {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .reaction-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .reaction-area {
+            background: var(--darker);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid var(--primary);
+        }
+
+        .reaction-equation {
+            background: var(--dark);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.3em;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .nomenclature-system {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .nomenclature-example {
+            background: var(--darker);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--alkane);
+        }
+
+        @media (max-width: 968px) {
+            .reaction-simulator {
+                grid-template-columns: 1fr;
+            }
+            
+            .hydrocarbon-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="organic-icon">🔬</div>
+            <h1>MÓDULO ORGÂNICO</h1>
+            <p>Química Orgânica - Hidrocarbonetos, Grupos Funcionais, Reações e Nomenclatura</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="hydrocarbons">⛽ Hidrocarbonetos</div>
+            <div class="tab" data-tab="functional-groups">⚗️ Grupos Funcionais</div>
+            <div class="tab" data-tab="reactions">🧪 Reações Orgânicas</div>
+            <div class="tab" data-tab="nomenclature">📚 Nomenclatura</div>
+            <div class="tab" data-tab="3d-viewer">🔬 Visualizador 3D</div>
+        </div>
+
+        <!-- ABA: Hidrocarbonetos -->
+        <div class="tab-content active" id="hydrocarbons">
+            <div class="control-group">
+                <h3>⛽ Hidrocarbonetos - Série Homóloga</h3>
+                <div class="hydrocarbon-grid">
+                    <div class="hydrocarbon-card alkane" onclick="loadMolecule('methane')">
+                        <div class="hydrocarbon-formula">CH₄</div>
+                        <div class="hydrocarbon-name">Metano</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcano</div>
+                    </div>
+                    <div class="hydrocarbon-card alkane" onclick="loadMolecule('ethane')">
+                        <div class="hydrocarbon-formula">C₂H₆</div>
+                        <div class="hydrocarbon-name">Etano</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcano</div>
+                    </div>
+                    <div class="hydrocarbon-card alkane" onclick="loadMolecule('propane')">
+                        <div class="hydrocarbon-formula">C₃H₈</div>
+                        <div class="hydrocarbon-name">Propano</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcano</div>
+                    </div>
+                    <div class="hydrocarbon-card alkene" onclick="loadMolecule('ethene')">
+                        <div class="hydrocarbon-formula">C₂H₄</div>
+                        <div class="hydrocarbon-name">Eteno</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alceno</div>
+                    </div>
+                    <div class="hydrocarbon-card alkene" onclick="loadMolecule('propene')">
+                        <div class="hydrocarbon-formula">C₃H₆</div>
+                        <div class="hydrocarbon-name">Propeno</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alceno</div>
+                    </div>
+                    <div class="hydrocarbon-card alkyne" onclick="loadMolecule('ethyne')">
+                        <div class="hydrocarbon-formula">C₂H₂</div>
+                        <div class="hydrocarbon-name">Etino</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcino</div>
+                    </div>
+                    <div class="hydrocarbon-card alkane" onclick="loadMolecule('butane')">
+                        <div class="hydrocarbon-formula">C₄H₁₀</div>
+                        <div class="hydrocarbon-name">Butano</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcano</div>
+                    </div>
+                    <div class="hydrocarbon-card alkane" onclick="loadMolecule('pentane')">
+                        <div class="hydrocarbon-formula">C₅H₁₂</div>
+                        <div class="hydrocarbon-name">Pentano</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Alcano</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="molecule-info">
+                <div class="info-card">
+                    <h4>📊 Informações do Hidrocarboneto</h4>
+                    <div class="property">
+                        <span>Nome:</span>
+                        <span id="hydrocarbonName">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Fórmula Molecular:</span>
+                        <span id="hydrocarbonFormula">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Fórmula Estrutural:</span>
+                        <span id="hydrocarbonStructure">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Massa Molar:</span>
+                        <span id="hydrocarbonMass">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4>🔬 Propriedades</h4>
+                    <div class="property">
+                        <span>Ponto de Fusão:</span>
+                        <span id="hydrocarbonMelting">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Ponto de Ebulição:</span>
+                        <span id="hydrocarbonBoiling">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Densidade:</span>
+                        <span id="hydrocarbonDensity">-</span>
+                    </div>
+                    <div class="property">
+                        <span>Estado Físico:</span>
+                        <span id="hydrocarbonState">-</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4>🎯 Aplicações</h4>
+                    <div id="hydrocarbonUses" style="line-height: 1.6;">
+                        Selecione um hidrocarboneto para ver suas aplicações...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Grupos Funcionais -->
+        <div class="tab-content" id="functional-groups">
+            <div class="control-group">
+                <h3>⚗️ Principais Grupos Funcionais</h3>
+                <div class="functional-groups">
+                    <div class="functional-group" onclick="loadFunctionalGroup('alcohol')">
+                        <div class="group-formula">-OH</div>
+                        <div class="group-name">Álcool</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Hidroxila</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('aldehyde')">
+                        <div class="group-formula">-CHO</div>
+                        <div class="group-name">Aldeído</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Carbonila terminal</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('ketone')">
+                        <div class="group-formula">C=O</div>
+                        <div class="group-name">Cetona</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Carbonila</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('carboxylic')">
+                        <div class="group-formula">-COOH</div>
+                        <div class="group-name">Ácido Carboxílico</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Carboxila</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('ester')">
+                        <div class="group-formula">-COO-</div>
+                        <div class="group-name">Éster</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Éster</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('amine')">
+                        <div class="group-formula">-NH₂</div>
+                        <div class="group-name">Amina</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Amino</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('amide')">
+                        <div class="group-formula">-CONH₂</div>
+                        <div class="group-name">Amida</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Carbamoíla</div>
+                    </div>
+                    <div class="functional-group" onclick="loadFunctionalGroup('ether')">
+                        <div class="group-formula">-O-</div>
+                        <div class="group-name">Éter</div>
+                        <div style="font-size: 0.8em; opacity: 0.7;">Oxigênio</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>🔍 Exemplos com Grupos Funcionais</h3>
+                <div class="viewer-controls">
+                    <button class="btn btn-alcohol" onclick="loadExampleMolecule('ethanol')">Etanol (C₂H₅OH)</button>
+                    <button class="btn btn-alcohol" onclick="loadExampleMolecule('methanol')">Metanol (CH₃OH)</button>
+                    <button class="btn btn-acid" onclick="loadExampleMolecule('acetic_acid')">Ácido Acético (CH₃COOH)</button>
+                    <button class="btn btn-primary" onclick="loadExampleMolecule('acetone')">Acetona (CH₃COCH₃)</button>
+                    <button class="btn btn-primary" onclick="loadExampleMolecule('formaldehyde')">Formaldeído (HCHO)</button>
+                </div>
+
+                <div id="functionalGroupInfo" style="margin-top: 20px; padding: 20px; background: var(--darker); border-radius: 10px;">
+                    <h4>Informações do Grupo Funcional</h4>
+                    <div id="groupDetails">
+                        Selecione um grupo funcional para ver detalhes...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Reações Orgânicas -->
+        <div class="tab-content" id="reactions">
+            <div class="reaction-simulator">
+                <div class="reaction-area">
+                    <h3>🧪 Simulador de Reações Orgânicas</h3>
+                    
+                    <div class="viewer-controls">
+                        <button class="btn btn-alkane" onclick="loadReaction('combustion')">Combustão</button>
+                        <button class="btn btn-alkene" onclick="loadReaction('addition')">Adição</button>
+                        <button class="btn btn-alcohol" onclick="loadReaction('esterification')">Esterificação</button>
+                        <button class="btn btn-acid" onclick="loadReaction('saponification')">Saponificação</button>
+                    </div>
+
+                    <div class="reaction-equation" id="reactionEquation">
+                        Selecione um tipo de reação...
+                    </div>
+
+                    <div id="reactionMechanism" style="background: var(--dark); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4>Mecanismo da Reação:</h4>
+                        <div id="mechanismDetails">
+                            -
+                        </div>
+                    </div>
+
+                    <div class="viewer-controls">
+                        <button class="btn btn-primary" onclick="simulateReaction()">Simular Reação</button>
+                        <button class="btn btn-primary" onclick="showReaction3D()">Visualizar em 3D</button>
+                    </div>
+                </div>
+
+                <div class="reaction-area">
+                    <h3>📖 Tipos de Reações Orgânicas</h3>
+                    
+                    <div class="control-group">
+                        <h4>⚡ Reações de Substituição</h4>
+                        <p>Ocorrem em alcanos e aromáticos. Um átomo ou grupo é substituído por outro.</p>
+                        <p><strong>Exemplo:</strong> CH₄ + Cl₂ → CH₃Cl + HCl</p>
+                    </div>
+
+                    <div class="control-group">
+                        <h4>➕ Reações de Adição</h4>
+                        <p>Ocorrem em alcenos e alcinos. Átomos são adicionados à molécula.</p>
+                        <p><strong>Exemplo:</strong> CH₂=CH₂ + H₂ → CH₃-CH₃</p>
+                    </div>
+
+                    <div class="control-group">
+                        <h4>🔥 Reações de Eliminação</h4>
+                        <p>Formam ligações duplas ou triplas através da remoção de átomos.</p>
+                        <p><strong>Exemplo:</strong> CH₃-CH₂-OH → CH₂=CH₂ + H₂O</p>
+                    </div>
+
+                    <div class="control-group">
+                        <h4>🔄 Reações de Oxidação</h4>
+                        <p>Envolvem aumento do número de oxidação do carbono.</p>
+                        <p><strong>Exemplo:</strong> CH₃CH₂OH → CH₃CHO → CH₃COOH</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Nomenclatura -->
+        <div class="tab-content" id="nomenclature">
+            <div class="control-group">
+                <h3>📚 Sistema de Nomenclatura IUPAC</h3>
+                
+                <div class="nomenclature-system">
+                    <div class="nomenclature-example">
+                        <h4>🎯 Alcanos</h4>
+                        <p><strong>Prefixo</strong> + <strong>ano</strong></p>
+                        <p>Exemplos:</p>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>CH₄ - Metano</li>
+                            <li>C₂H₆ - Etano</li>
+                            <li>C₃H₈ - Propano</li>
+                            <li>C₄H₁₀ - Butano</li>
+                            <li>C₅H₁₂ - Pentano</li>
+                        </ul>
+                    </div>
+
+                    <div class="nomenclature-example">
+                        <h4>🔗 Alcenos</h4>
+                        <p><strong>Prefixo</strong> + <strong>eno</strong></p>
+                        <p>Exemplos:</p>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>C₂H₄ - Eteno</li>
+                            <li>C₃H₆ - Propeno</li>
+                            <li>C₄H₈ - Buteno</li>
+                            <li>CH₂=CH-CH₃ - Propeno</li>
+                        </ul>
+                    </div>
+
+                    <div class="nomenclature-example">
+                        <h4>⚡ Alcinos</h4>
+                        <p><strong>Prefixo</strong> + <strong>ino</strong></p>
+                        <p>Exemplos:</p>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>C₂H₂ - Etino</li>
+                            <li>C₃H₄ - Propino</li>
+                            <li>C₄H₆ - Butino</li>
+                        </ul>
+                    </div>
+
+                    <div class="nomenclature-example">
+                        <h4>🍷 Álcoois</h4>
+                        <p><strong>Prefixo</strong> + <strong>anol</strong></p>
+                        <p>Exemplos:</p>
+                        <ul style="margin-left: 20px; line-height: 1.8;">
+                            <li>CH₃OH - Metanol</li>
+                            <li>CH₃CH₂OH - Etanol</li>
+                            <li>CH₃CH₂CH₂OH - Propan-1-ol</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>🧮 Praticar Nomenclatura</h3>
+                <div id="nomenclaturePractice" style="padding: 20px; background: var(--darker); border-radius: 10px;">
+                    <div class="reaction-equation" id="practiceMolecule">
+                        CH₃-CH₂-CH₂-OH
+                    </div>
+                    <input type="text" id="nomenclatureAnswer" placeholder="Digite o nome IUPAC..." 
+                           style="width: 100%; padding: 15px; margin: 15px 0; background: var(--dark); border: 2px solid var(--primary); border-radius: 8px; color: white;">
+                    <button class="btn btn-primary" onclick="checkNomenclature()">Verificar Resposta</button>
+                    <div id="nomenclatureResult" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: Visualizador 3D -->
+        <div class="tab-content" id="3d-viewer">
+            <div class="control-group">
+                <h3>🔬 Visualizador 3D de Moléculas Orgânicas</h3>
+                
+                <div class="viewer-controls">
+                    <button class="btn btn-alkane" onclick="loadMolecule3D('methane')">Metano</button>
+                    <button class="btn btn-alkane" onclick="loadMolecule3D('ethane')">Etano</button>
+                    <button class="btn btn-alkene" onclick="loadMolecule3D('ethene')">Eteno</button>
+                    <button class="btn btn-alkyne" onclick="loadMolecule3D('ethyne')">Etino</button>
+                    <button class="btn btn-alcohol" onclick="loadMolecule3D('ethanol')">Etanol</button>
+                    <button class="btn btn-acid" onclick="loadMolecule3D('acetic_acid')">Ácido Acético</button>
+                </div>
+
+                <div id="organicViewer3D">
+                    <!-- Visualizador 3D será inserido aqui -->
+                </div>
+
+                <div class="molecule-info">
+                    <div class="info-card">
+                        <h4 id="organicMoleculeName">Selecione uma molécula</h4>
+                        <div class="property">
+                            <span>Fórmula Molecular:</span>
+                            <span id="organicFormula">-</span>
+                        </div>
+                        <div class="property">
+                            <span>Massa Molar:</span>
+                            <span id="organicMass">-</span>
+                        </div>
+                        <div class="property">
+                            <span>Geometria Molecular:</span>
+                            <span id="organicGeometry">-</span>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h4>📐 Ligações</h4>
+                        <div class="property">
+                            <span>Ligações C-H:</span>
+                            <span id="chBonds">-</span>
+                        </div>
+                        <div class="property">
+                            <span>Ligações C-C:</span>
+                            <span id="ccBonds">-</span>
+                        </div>
+                        <div class="property">
+                            <span>Ligações C-O:</span>
+                            <span id="coBonds">-</span>
+                        </div>
+                        <div class="property">
+                            <span>Ângulos de Ligações:</span>
+                            <span id="bondAngles">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados dos Hidrocarbonetos
+        const hydrocarbons = {
+            'methane': {
+                name: 'Metano',
+                formula: 'CH₄',
+                structure: 'CH₄',
+                mass: '16.04 g/mol',
+                melting: '-182.5 °C',
+                boiling: '-161.5 °C',
+                density: '0.000656 g/cm³',
+                state: 'Gasoso',
+                uses: 'Combustível, produção de hidrogênio, síntese de compostos orgânicos'
+            },
+            'ethane': {
+                name: 'Etano',
+                formula: 'C₂H₆',
+                structure: 'CH₃-CH₃',
+                mass: '30.07 g/mol',
+                melting: '-183.3 °C',
+                boiling: '-88.6 °C',
+                density: '0.00136 g/cm³',
+                state: 'Gasoso',
+                uses: 'Produção de etileno, combustível, refrigerante'
+            },
+            'propane': {
+                name: 'Propano',
+                formula: 'C₃H₈',
+                structure: 'CH₃-CH₂-CH₃',
+                mass: '44.10 g/mol',
+                melting: '-187.7 °C',
+                boiling: '-42.1 °C',
+                density: '0.00183 g/cm³',
+                state: 'Gasoso',
+                uses: 'Gás de cozinha, combustível, propelente'
+            },
+            'ethene': {
+                name: 'Eteno',
+                formula: 'C₂H₄',
+                structure: 'CH₂=CH₂',
+                mass: '28.05 g/mol',
+                melting: '-169.2 °C',
+                boiling: '-103.7 °C',
+                density: '0.00118 g/cm³',
+                state: 'Gasoso',
+                uses: 'Produção de polietileno, plásticos, amadurecimento de frutas'
+            },
+            'propene': {
+                name: 'Propeno',
+                formula: 'C₃H₆',
+                structure: 'CH₂=CH-CH₃',
+                mass: '42.08 g/mol',
+                melting: '-185.2 °C',
+                boiling: '-47.6 °C',
+                density: '0.00191 g/cm³',
+                state: 'Gasoso',
+                uses: 'Produção de polipropileno, plásticos, síntese orgânica'
+            },
+            'ethyne': {
+                name: 'Etino (Acetileno)',
+                formula: 'C₂H₂',
+                structure: 'CH≡CH',
+                mass: '26.04 g/mol',
+                melting: '-80.8 °C',
+                boiling: '-84.0 °C',
+                density: '0.00110 g/cm³',
+                state: 'Gasoso',
+                uses: 'Solda oxiacetilênica, síntese orgânica, iluminação'
+            },
+            'butane': {
+                name: 'Butano',
+                formula: 'C₄H₁₀',
+                structure: 'CH₃-CH₂-CH₂-CH₃',
+                mass: '58.12 g/mol',
+                melting: '-138.4 °C',
+                boiling: '-0.5 °C',
+                density: '0.00248 g/cm³',
+                state: 'Gasoso',
+                uses: 'Gás de isqueiro, combustível, propelente'
+            },
+            'pentane': {
+                name: 'Pentano',
+                formula: 'C₅H₁₂',
+                structure: 'CH₃-CH₂-CH₂-CH₂-CH₃',
+                mass: '72.15 g/mol',
+                melting: '-129.7 °C',
+                boiling: '36.1 °C',
+                density: '0.626 g/cm³',
+                state: 'Líquido',
+                uses: 'Solvente, combustível, produção de espumas'
+            }
+        };
+
+        // Dados dos Grupos Funcionais
+        const functionalGroups = {
+            'alcohol': {
+                name: 'Álcool',
+                formula: '-OH',
+                prefix: 'ol',
+                example: 'CH₃CH₂OH - Etanol',
+                properties: 'Polar, forma pontes de hidrogênio, solubilidade em água',
+                reactivity: 'Pode sofrer oxidação, esterificação, desidratação'
+            },
+            'aldehyde': {
+                name: 'Aldeído',
+                formula: '-CHO',
+                prefix: 'al',
+                example: 'HCHO - Metanal (Formaldeído)',
+                properties: 'Polar, ponto de ebulição intermediário, odor característico',
+                reactivity: 'Facilmente oxidado, reações de adição nucleofílica'
+            },
+            'ketone': {
+                name: 'Cetona',
+                formula: 'C=O',
+                prefix: 'ona',
+                example: 'CH₃COCH₃ - Propanona (Acetona)',
+                properties: 'Polar, solvente orgânico importante',
+                reactivity: 'Reações de adição nucleofílica, resistente à oxidação'
+            },
+            'carboxylic': {
+                name: 'Ácido Carboxílico',
+                formula: '-COOH',
+                prefix: 'óico',
+                example: 'CH₃COOH - Ácido Etanoico (Acético)',
+                properties: 'Ácido fraco, forma pontes de hidrogênio, odor característico',
+                reactivity: 'Reações de esterificação, neutralização, descarboxilação'
+            },
+            'ester': {
+                name: 'Éster',
+                formula: '-COO-',
+                prefix: 'ato',
+                example: 'CH₃COOCH₃ - Etanoato de Metila',
+                properties: 'Odor agradável (frutas), solventes, baixa solubilidade em água',
+                reactivity: 'Hidrólise, transesterificação'
+            },
+            'amine': {
+                name: 'Amina',
+                formula: '-NH₂',
+                prefix: 'amina',
+                example: 'CH₃NH₂ - Metanamina',
+                properties: 'Bases fracas, odor de peixe, formam sais',
+                reactivity: 'Alquilação, acilação, formação de complexos'
+            },
+            'amide': {
+                name: 'Amida',
+                formula: '-CONH₂',
+                prefix: 'amida',
+                example: 'CH₃CONH₂ - Etanamida',
+                properties: 'Pontos de fusão elevados, ligações de hidrogênio',
+                reactivity: 'Hidrólise, desidratação'
+            },
+            'ether': {
+                name: 'Éter',
+                formula: '-O-',
+                prefix: 'éter',
+                example: 'CH₃OCH₃ - Metoximetano',
+                properties: 'Pouco polar, baixa reatividade, bons solventes',
+                reactivity: 'Pouco reativos, podem formar peróxidos'
+            }
+        };
+
+        // Dados das Reações
+        const organicReactions = {
+            'combustion': {
+                equation: 'CH₄ + 2O₂ → CO₂ + 2H₂O + Energia',
+                type: 'Combustão Completa',
+                mechanism: 'Reação exotérmica de oxidação completa. O hidrocarboneto reage com oxigênio produzindo dióxido de carbono e água.',
+                examples: ['Metano: CH₄ + 2O₂ → CO₂ + 2H₂O', 'Etano: 2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O']
+            },
+            'addition': {
+                equation: 'CH₂=CH₂ + H₂ → CH₃-CH₃',
+                type: 'Hidrogenação',
+                mechanism: 'Reação de adição onde átomos de hidrogênio são adicionados à ligação dupla, catalisada por metais como níquel ou platina.',
+                examples: ['Eteno + Hidrogênio: CH₂=CH₂ + H₂ → CH₃-CH₃', 'Eteno + Bromo: CH₂=CH₂ + Br₂ → CH₂Br-CH₂Br']
+            },
+            'esterification': {
+                equation: 'CH₃COOH + CH₃CH₂OH → CH₃COOCH₂CH₃ + H₂O',
+                type: 'Esterificação de Fischer',
+                mechanism: 'Ácido carboxílico reage com álcool formando éster e água, catalisada por ácido. Reação reversível.',
+                examples: ['Ácido acético + Etanol: CH₃COOH + CH₃CH₂OH → CH₃COOCH₂CH₃ + H₂O']
+            },
+            'saponification': {
+                equation: 'CH₃COOCH₂CH₃ + NaOH → CH₃COONa + CH₃CH₂OH',
+                type: 'Hidrólise Alcalina',
+                mechanism: 'Éster reage com base forte produzindo sal de ácido carboxílico e álcool. Base da produção de sabões.',
+                examples: ['Éster etílico + NaOH: CH₃COOCH₂CH₃ + NaOH → CH₃COONa + CH₃CH₂OH']
+            }
+        };
+
+        // Variáveis globais
+        let currentMolecule = null;
+        let scene, camera, renderer, controls;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            initialize3DViewer();
+            loadMolecule('methane'); // Carregar metano por padrão
+        });
+
+        // Sistema de Abas
+        function initializeTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // Hidrocarbonetos
+        function loadMolecule(moleculeKey) {
+            const molecule = hydrocarbons[moleculeKey];
+            if (!molecule) return;
+            
+            currentMolecule = molecule;
+            
+            // Atualizar informações
+            document.getElementById('hydrocarbonName').textContent = molecule.name;
+            document.getElementById('hydrocarbonFormula').textContent = molecule.formula;
+            document.getElementById('hydrocarbonStructure').textContent = molecule.structure;
+            document.getElementById('hydrocarbonMass').textContent = molecule.mass;
+            document.getElementById('hydrocarbonMelting').textContent = molecule.melting;
+            document.getElementById('hydrocarbonBoiling').textContent = molecule.boiling;
+            document.getElementById('hydrocarbonDensity').textContent = molecule.density;
+            document.getElementById('hydrocarbonState').textContent = molecule.state;
+            document.getElementById('hydrocarbonUses').textContent = molecule.uses;
+        }
+
+        // Grupos Funcionais
+        function loadFunctionalGroup(groupKey) {
+            const group = functionalGroups[groupKey];
+            if (!group) return;
+            
+            document.getElementById('groupDetails').innerHTML = `
+                <p><strong>Nome:</strong> ${group.name}</p>
+                <p><strong>Grupo Funcional:</strong> ${group.formula}</p>
+                <p><strong>Sufixo IUPAC:</strong> -${group.prefix}</p>
+                <p><strong>Exemplo:</strong> ${group.example}</p>
+                <p><strong>Propriedades:</strong> ${group.properties}</p>
+                <p><strong>Reatividade:</strong> ${group.reactivity}</p>
+            `;
+        }
+
+        function loadExampleMolecule(molecule) {
+            const examples = {
+                'ethanol': {
+                    name: 'Etanol',
+                    formula: 'C₂H₅OH',
+                    group: 'Álcool',
+                    uses: 'Combustível, solvente, bebidas alcoólicas'
+                },
+                'methanol': {
+                    name: 'Metanol',
+                    formula: 'CH₃OH',
+                    group: 'Álcool',
+                    uses: 'Combustível, solvente, anticongelante'
+                },
+                'acetic_acid': {
+                    name: 'Ácido Acético',
+                    formula: 'CH₃COOH',
+                    group: 'Ácido Carboxílico',
+                    uses: 'Vinagre, produção de acetato, síntese orgânica'
+                },
+                'acetone': {
+                    name: 'Acetona',
+                    formula: 'CH₃COCH₃',
+                    group: 'Cetona',
+                    uses: 'Solvente, removedor de esmalte, síntese orgânica'
+                },
+                'formaldehyde': {
+                    name: 'Formaldeído',
+                    formula: 'HCHO',
+                    group: 'Aldeído',
+                    uses: 'Desinfetante, conservante, produção de resinas'
+                }
+            };
+            
+            const example = examples[molecule];
+            if (example) {
+                document.getElementById('groupDetails').innerHTML = `
+                    <p><strong>Nome:</strong> ${example.name}</p>
+                    <p><strong>Fórmula:</strong> ${example.formula}</p>
+                    <p><strong>Grupo Funcional:</strong> ${example.group}</p>
+                    <p><strong>Aplicações:</strong> ${example.uses}</p>
+                `;
+            }
+        }
+
+        // Reações Orgânicas
+        function loadReaction(reactionType) {
+            const reaction = organicReactions[reactionType];
+            if (!reaction) return;
+            
+            document.getElementById('reactionEquation').textContent = reaction.equation;
+            document.getElementById('mechanismDetails').innerHTML = `
+                <p><strong>Tipo:</strong> ${reaction.type}</p>
+                <p><strong>Mecanismo:</strong> ${reaction.mechanism}</p>
+                <p><strong>Exemplos:</strong></p>
+                <ul>
+                    ${reaction.examples.map(ex => `<li>${ex}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        function simulateReaction() {
+            // Simulação simples - em implementação real teria animações
+            alert('Simulação da reação orgânica em andamento...');
+        }
+
+        function showReaction3D() {
+            alert('Visualização 3D da reação será implementada...');
+        }
+
+        // Nomenclatura
+        function checkNomenclature() {
+            const answer = document.getElementById('nomenclatureAnswer').value.toLowerCase();
+            const correctAnswers = ['propan-1-ol', '1-propanol', 'propano-1-ol'];
+            
+            if (correctAnswers.includes(answer)) {
+                document.getElementById('nomenclatureResult').innerHTML = 
+                    '<span style="color: #6cbe45;">✅ Correto! Propan-1-ol é o nome IUPAC.</span>';
+            } else {
+                document.getElementById('nomenclatureResult').innerHTML = 
+                    '<span style="color: #ff4757;">❌ Tente novamente. O nome IUPAC é Propan-1-ol</span>';
+            }
+        }
+
+        // Visualizador 3D
+        function initialize3DViewer() {
+            const container = document.getElementById('organicViewer3D');
+            
+            // Cena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e1e2f);
+            
+            // Câmera
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+            
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Luz
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            // Animação
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // Redimensionamento
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+            
+            // Carregar molécula inicial
+            loadMolecule3D('methane');
+        }
+
+        function loadMolecule3D(moleculeKey) {
+            const molecules3D = {
+                'methane': {
+                    name: 'Metano',
+                    formula: 'CH₄',
+                    mass: '16.04 g/mol',
+                    geometry: 'Tetraédrica',
+                    chBonds: '4',
+                    ccBonds: '0',
+                    coBonds: '0',
+                    bondAngles: '109.5°'
+                },
+                'ethane': {
+                    name: 'Etano',
+                    formula: 'C₂H₆',
+                    mass: '30.07 g/mol',
+                    geometry: 'Tetraédrica',
+                    chBonds: '6',
+                    ccBonds: '1',
+                    coBonds: '0',
+                    bondAngles: '109.5°'
+                },
+                'ethene': {
+                    name: 'Eteno',
+                    formula: 'C₂H₄',
+                    mass: '28.05 g/mol',
+                    geometry: 'Plana',
+                    chBonds: '4',
+                    ccBonds: '1 (dupla)',
+                    coBonds: '0',
+                    bondAngles: '120°'
+                },
+                'ethyne': {
+                    name: 'Etino',
+                    formula: 'C₂H₂',
+                    mass: '26.04 g/mol',
+                    geometry: 'Linear',
+                    chBonds: '2',
+                    ccBonds: '1 (tripla)',
+                    coBonds: '0',
+                    bondAngles: '180°'
+                },
+                'ethanol': {
+                    name: 'Etanol',
+                    formula: 'C₂H₅OH',
+                    mass: '46.07 g/mol',
+                    geometry: 'Tetraédrica/angular',
+                    chBonds: '5',
+                    ccBonds: '1',
+                    coBonds: '1',
+                    bondAngles: '104.5° (O-H)'
+                },
+                'acetic_acid': {
+                    name: 'Ácido Acético',
+                    formula: 'CH₃COOH',
+                    mass: '60.05 g/mol',
+                    geometry: 'Tetraédrica/plana',
+                    chBonds: '3',
+                    ccBonds: '1',
+                    coBonds: '2',
+                    bondAngles: '120° (C=O)'
+                }
+            };
+            
+            const molecule = molecules3D[moleculeKey];
+            if (!molecule) return;
+            
+            // Atualizar informações
+            document.getElementById('organicMoleculeName').textContent = molecule.name;
+            document.getElementById('organicFormula').textContent = molecule.formula;
+            document.getElementById('organicMass').textContent = molecule.mass;
+            document.getElementById('organicGeometry').textContent = molecule.geometry;
+            document.getElementById('chBonds').textContent = molecule.chBonds;
+            document.getElementById('ccBonds').textContent = molecule.ccBonds;
+            document.getElementById('coBonds').textContent = molecule.coBonds;
+            document.getElementById('bondAngles').textContent = molecule.bondAngles;
+            
+            // Simulação 3D simplificada - em implementação real renderizaria a molécula
+            console.log(`Carregando molécula 3D: ${molecule.name}`);
+        }
+    </script>
+</body>
+</html>

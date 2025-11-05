@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Lab - Editor Markdown</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #2b5b84;
+            --secondary: #6cbe45;
+            --dark: #1e1e2f;
+            --darker: #151523;
+            --light: #2a2a3e;
+            --text: #ffffff;
+            --accent: #ff6b00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--light);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--light) 100%);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--secondary), #8dee6a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 80vh;
+        }
+
+        @media (max-width: 968px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .editor-panel, .preview-panel {
+            padding: 0;
+            position: relative;
+        }
+
+        .panel-header {
+            background: var(--darker);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        #markdownEditor {
+            width: 100%;
+            height: calc(100% - 60px);
+            background: var(--darker);
+            border: none;
+            padding: 20px;
+            color: var(--text);
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        #markdownPreview {
+            height: calc(100% - 60px);
+            padding: 20px;
+            background: var(--darker);
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        /* Estilização do Markdown Preview */
+        #markdownPreview h1, 
+        #markdownPreview h2, 
+        #markdownPreview h3 {
+            color: var(--secondary);
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+        }
+
+        #markdownPreview h1 { font-size: 2em; }
+        #markdownPreview h2 { font-size: 1.6em; }
+        #markdownPreview h3 { font-size: 1.3em; }
+
+        #markdownPreview p {
+            margin: 10px 0;
+        }
+
+        #markdownPreview code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #ff6b6b;
+        }
+
+        #markdownPreview pre {
+            background: #151523;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        #markdownPreview blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #cccccc;
+            background: rgba(43, 91, 132, 0.1);
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        #markdownPreview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        #markdownPreview th, 
+        #markdownPreview td {
+            padding: 10px;
+            border: 1px solid var(--primary);
+            text-align: left;
+        }
+
+        #markdownPreview th {
+            background: var(--primary);
+            color: white;
+        }
+
+        #markdownPreview ul, 
+        #markdownPreview ol {
+            margin: 10px 0 10px 20px;
+        }
+
+        #markdownPreview li {
+            margin: 5px 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 15px;
+            background: var(--darker);
+            border-bottom: 1px solid var(--primary);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-1px);
+        }
+
+        .file-controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: var(--darker);
+            border-top: 1px solid var(--primary);
+            justify-content: center;
+        }
+
+        .file-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #7dce5a;
+        }
+
+        .btn-load {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: #3a7bbf;
+        }
+
+        .btn-new {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-new:hover {
+            background: #ff8c42;
+        }
+
+        .status-bar {
+            background: var(--darker);
+            padding: 8px 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #cccccc;
+            border-top: 1px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 EDITOR MARKDOWN - QUANTUM LAB</h1>
+            <p>Editor científico com suporte a LaTeX, código e exportação</p>
+        </div>
+
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="insertText('**', '**')">Negrito</button>
+            <button class="toolbar-btn" onclick="insertText('*', '*')">Itálico</button>
+            <button class="toolbar-btn" onclick="insertText('# ', '')">Título 1</button>
+            <button class="toolbar-btn" onclick="insertText('## ', '')">Título 2</button>
+            <button class="toolbar-btn" onclick="insertText('### ', '')">Título 3</button>
+            <button class="toolbar-btn" onclick="insertText('`', '`')">Código</button>
+            <button class="toolbar-btn" onclick="insertText('```python\n', '\n```')">Bloco Python</button>
+            <button class="toolbar-btn" onclick="insertText('```javascript\n', '\n```')">Bloco JS</button>
+            <button class="toolbar-btn" onclick="insertText('- ', '')">Lista</button>
+            <button class="toolbar-btn" onclick="insertText('1. ', '')">Lista Num.</button>
+            <button class="toolbar-btn" onclick="insertText('> ', '')">Citação</button>
+            <button class="toolbar-btn" onclick="insertText('[', '](url)')">Link</button>
+            <button class="toolbar-btn" onclick="insertText('![', '](imagem.jpg)')">Imagem</button>
+            <button class="toolbar-btn" onclick="insertText('$$', '$$')">LaTeX Bloco</button>
+            <button class="toolbar-btn" onclick="insertText('$', '$')">LaTeX Inline</button>
+            <button class="toolbar-btn" onclick="insertText('---\n', '')">Linha</button>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📄 EDITOR MARKDOWN</span>
+                    <span id="charCount">0 caracteres</span>
+                </div>
+                <textarea id="markdownEditor" placeholder="Digite seu conteúdo Markdown aqui...
+
+# Exemplo de Título
+**Texto em negrito** e *itálico*
+
+## Código
+```python
+def quantum_state():
+    return \"Superposição quântica\"
+```
+
+Matemática
+
+Equação de Schrödinger:
+i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
+
+Listas
+
+· Item 1
+· Item 2
+· Item 3
+
+Citação científica interessante..."></textarea>
+</div>
+
+</body>
+</html>
