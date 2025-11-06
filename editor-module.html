@@ -43,7 +43,7 @@
             max-width: 1400px;
             margin: 0 auto;
             background: var(--light);
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
@@ -59,6 +59,13 @@
             background: linear-gradient(45deg, var(--secondary), #8dee6a);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+		.editor-icon {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            font-size: 4em;
+            opacity: 0.3;
         }
         .editor-container {
             display: grid;
@@ -250,7 +257,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📝 EDITOR MARKDOWN - QUANTUM LAB</h1>
+			<div class="editor-icon">📝</div>
+            <h1>MÓDULO EDITOR MARKDOWN</h1>
             <p>Editor científico com suporte a LaTeX, código e exportação</p>
         </div>
 

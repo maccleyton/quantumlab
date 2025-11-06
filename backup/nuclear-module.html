@@ -177,7 +177,7 @@
         }
 
         input[type="range"] {
-            width: 100%;
+            width: 100;
             height: 8px;
             border-radius: 5px;
             background: var(--darker);
@@ -201,50 +201,10 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
-        .visualization-container {
-            position: relative;
-        }
-
         .chart-container {
             position: relative;
             height: 300px;
             margin-bottom: 25px;
-        }
-
-        .chart-container-3d {
-            position: relative;
-            height: 300px;
-            margin-bottom: 25px;
-            background: #000000;
-            border-radius: 10px;
-            border: 1px solid var(--primary);
-        }
-
-        .chart-toggle {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            justify-content: center;
-        }
-
-        .btn-toggle {
-            padding: 8px 15px;
-            border: 2px solid var(--primary);
-            background: var(--darker);
-            color: var(--text);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-        }
-
-        .btn-toggle.active {
-            background: var(--primary);
-            border-color: var(--nuclear);
-        }
-
-        .btn-toggle:hover {
-            transform: translateY(-2px);
         }
 
         .nuclear-equation {
@@ -369,12 +329,6 @@
             height: 12px;
             border-radius: 50%;
         }
-
-        #atomCanvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-        }
     </style>
 </head>
 <body>
@@ -382,7 +336,7 @@
         <div class="header">
             <div class="nuclear-icon">☢️</div>
             <h1>MÓDULO NUCLEAR</h1>
-            <p>Simulação de Decaimento Radioativo - 14 Elementos</p>
+            <p>Simulação de Decaimento Radioativo - 12 Elementos</p>
         </div>
 
         <div class="simulation-container">
@@ -435,25 +389,15 @@
 
                 <div class="controls">
                     <button class="btn btn-nuclear" onclick="startSimulation()">▶️ Iniciar Simulação</button>
-                    <button class="btn btn-primary" onclick="stopSimulation()">⏹️ Parar</button>
+                    <button class="btn btn-primary" onclick="resetSimulation()">🔄 Reiniciar</button>
                     <button class="btn btn-success" onclick="exportData()">📊 Exportar Dados</button>
                 </div>
             </div>
 
             <!-- Painel de Visualização -->
             <div class="display-panel">
-                <div class="visualization-container">
-                    <div class="chart-toggle">
-                        <button class="btn-toggle active" onclick="switchView('2d')">📊 Vista 2D</button>
-                        <button class="btn-toggle" onclick="switchView('3d')">🔄 Vista 3D</button>
-                    </div>
-                    
-                    <div class="chart-container" id="chart2d">
-                        <canvas id="decayChart"></canvas>
-                    </div>
-                    <div class="chart-container-3d" id="chart3d" style="display: none;">
-                        <canvas id="atomCanvas"></canvas>
-                    </div>
+                <div class="chart-container">
+                    <canvas id="decayChart"></canvas>
                 </div>
 
                 <div class="nuclear-equation">
@@ -638,8 +582,6 @@
         let currentElement = 'uranium238';
         let simulationChart = null;
         let animationId = null;
-        let is3DViewActive = false;
-        let atomAnimationId = null;
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', function() {
@@ -671,9 +613,6 @@
                     this.classList.add('active');
                     currentElement = this.dataset.element;
                     updateDisplay();
-                    if (is3DViewActive) {
-                        init3DView();
-                    }
                 });
 
                 grid.appendChild(btn);
@@ -880,7 +819,7 @@
             }, 3000);
         }
 
-        function stopSimulation() {
+        function resetSimulation() {
             if (simulationChart) {
                 simulationChart.data.labels = [];
                 simulationChart.data.datasets[0].data = [];
@@ -893,163 +832,6 @@
             if (animationId) {
                 cancelAnimationFrame(animationId);
             }
-            
-            if (atomAnimationId) {
-                cancelAnimationFrame(atomAnimationId);
-            }
-        }
-
-        function switchView(viewType) {
-            const chart2d = document.getElementById('chart2d');
-            const chart3d = document.getElementById('chart3d');
-            const buttons = document.querySelectorAll('.btn-toggle');
-            
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            if (viewType === '2d') {
-                chart2d.style.display = 'block';
-                chart3d.style.display = 'none';
-                document.querySelector('.btn-toggle:nth-child(1)').classList.add('active');
-                is3DViewActive = false;
-                
-                if (atomAnimationId) {
-                    cancelAnimationFrame(atomAnimationId);
-                }
-            } else {
-                chart2d.style.display = 'none';
-                chart3d.style.display = 'block';
-                document.querySelector('.btn-toggle:nth-child(2)').classList.add('active');
-                is3DViewActive = true;
-                init3DView();
-            }
-        }
-
-        function init3DView() {
-            const canvas = document.getElementById('atomCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Configurar canvas
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            
-            if (atomAnimationId) {
-                cancelAnimationFrame(atomAnimationId);
-            }
-            
-            drawAtomicDecay(ctx, canvas.width, canvas.height);
-        }
-
-        function drawAtomicDecay(ctx, width, height) {
-            // Limpar canvas com preto sólido
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, width, height);
-            
-            const element = elements[currentElement];
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const time = Date.now() * 0.001;
-            
-            // Desenhar núcleo atômico
-            ctx.fillStyle = element.color;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Adicionar detalhes ao núcleo
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            for (let i = 0; i < 8; i++) {
-                const angle = time + i * Math.PI / 4;
-                const x = centerX + Math.cos(angle) * 15;
-                const y = centerY + Math.sin(angle) * 10;
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // Elétrons/orbitas
-            const electronCount = Math.min(8, Math.max(3, Math.floor(element.halfLife / 1e6) + 3));
-            
-            for (let orbit = 0; orbit < 3; orbit++) {
-                const radius = 60 + orbit * 40;
-                const electronsInOrbit = Math.min(electronCount - orbit * 3, 3);
-                
-                // Desenhar órbita
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                
-                // Desenhar elétrons
-                for (let i = 0; i < electronsInOrbit; i++) {
-                    const angle = time * 2 + (i * Math.PI * 2 / electronsInOrbit) + orbit;
-                    const x = centerX + Math.cos(angle) * radius;
-                    const y = centerY + Math.sin(angle) * radius;
-                    
-                    ctx.fillStyle = '#ffffff';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 6, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = element.color;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-            
-            // Partículas de decaimento
-            const decayParticles = Math.min(5, Math.floor(parseInt(document.getElementById('initialAmount').value) / 200));
-            
-            for (let i = 0; i < decayParticles; i++) {
-                const particleAngle = time * 3 + i * Math.PI * 2 / decayParticles;
-                const distance = 100 + Math.sin(time * 2 + i) * 30;
-                const x = centerX + Math.cos(particleAngle) * distance;
-                const y = centerY + Math.sin(particleAngle) * distance;
-                
-                // Tipo de partícula baseado no decaimento
-                let particleColor;
-                let particleSize;
-                
-                if (element.decayType === 'alpha') {
-                    particleColor = 'var(--alpha)';
-                    particleSize = 8;
-                } else if (element.decayType === 'beta') {
-                    particleColor = 'var(--beta)';
-                    particleSize = 5;
-                } else {
-                    particleColor = 'var(--gamma)';
-                    particleSize = 12;
-                }
-                
-                ctx.fillStyle = particleColor;
-                ctx.beginPath();
-                ctx.arc(x, y, particleSize, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Cauda da partícula
-                ctx.strokeStyle = particleColor;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(
-                    x - Math.cos(particleAngle) * 20,
-                    y - Math.sin(particleAngle) * 20
-                );
-                ctx.stroke();
-            }
-            
-            // Texto informativo
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`Decaimento ${element.decayType.toUpperCase()} - ${element.name}`, centerX, 30);
-            ctx.font = '12px Arial';
-            ctx.fillText(`Meia-vida: ${formatHalfLife(element.halfLife)}`, centerX, height - 20);
-            
-            // Continuar animação
-            atomAnimationId = requestAnimationFrame(() => drawAtomicDecay(ctx, width, height));
         }
 
         function exportData() {
