@@ -1,6 +1,8 @@
 ﻿# QuantumLab
 
-## Laboratório de simulações em nível educacional
+Plataforma Integrada de Simulação Científica
+
+### Laboratório de simulações em nível educacional
 
 ## Link para acesso
 https://quantumlab-mac.vercel.app/
@@ -8,4 +10,3 @@ https://quantumlab-mac.vercel.app/
 ## Observações
 - Projeto em revisão
 - Em estudo unificação com o Workspace
-
