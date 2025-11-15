@@ -20,6 +20,7 @@
             --alpha: #ff4757;
             --beta: #6cbe45;
             --gamma: #2b5b84;
+            --cesium: #ffa502;
         }
 
         * {
@@ -215,7 +216,7 @@
             position: relative;
             height: 300px;
             margin-bottom: 25px;
-            background: #000000;
+            background: var(--darker); /* COR ALTERADA PARA COMBINAR COM OS CARDS */
             border-radius: 10px;
             border: 1px solid var(--primary);
         }
@@ -382,7 +383,7 @@
         <div class="header">
             <div class="nuclear-icon">☢️</div>
             <h1>MÓDULO NUCLEAR</h1>
-            <p>Simulação de Decaimento Radioativo - 14 Elementos</p>
+            <p>Simulação de Decaimento Radioativo - 15 Elementos</p>
         </div>
 
         <div class="simulation-container">
@@ -491,7 +492,7 @@
     </div>
 
     <script>
-        // Dados expandidos dos elementos radioativos
+        // Dados expandidos dos elementos radioativos - AGORA COM CÉSIO-137
         const elements = {
             uranium238: {
                 name: "Urânio-238",
@@ -632,6 +633,17 @@
                 color: '#2b5b84',
                 decayProduct: "Tc-99",
                 uses: "Medicina nuclear"
+            },
+            // NOVO ELEMENTO: CÉSIO-137
+            cesium137: {
+                name: "Césio-137",
+                symbol: "Cs-137",
+                halfLife: 30.17,
+                lambda: 7.309e-2,
+                decayType: "beta",
+                color: '#ffa502',
+                decayProduct: "Ba-137m",
+                uses: "Radioterapia, calibração de equipamentos"
             }
         };
 
@@ -940,8 +952,8 @@
         }
 
         function drawAtomicDecay(ctx, width, height) {
-            // Limpar canvas com preto sólido
-            ctx.fillStyle = '#000000';
+            // Limpar canvas com a mesma cor dos cards (var(--darker))
+            ctx.fillStyle = '#151523'; // Cor equivalente a var(--darker)
             ctx.fillRect(0, 0, width, height);
             
             const element = elements[currentElement];

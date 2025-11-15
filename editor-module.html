@@ -72,7 +72,7 @@
         .editor-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-			height: 75vh; /* % da altura da janela */
+			height: 75vh;
 			min-height: 400px;
         }
         @media (max-width: 968px) {
@@ -89,6 +89,7 @@
 			min-height: 200px;
 			display: flex;
 			flex-direction: column;
+            overflow: hidden;
         }
         .panel-header {
             background: var(--darker);
@@ -97,6 +98,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         .panel-title {
             font-weight: bold;
@@ -116,6 +118,11 @@
             resize: none;
             outline: none;
 			overflow-y: auto;
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: normal;
+            tab-size: 4;
         }
         #markdownPreview {
 			flex: 1 1 auto;
@@ -123,23 +130,38 @@
             padding: 20px;
             background: var(--darker);
             overflow-y: auto;
-			overflow-x: auto;
+            overflow-x: hidden;
             line-height: 1.7;
+            max-width: 100%;
+            word-wrap: break-word;
+            word-break: normal;
+            overflow-wrap: break-word;
         }
         /* Estilização do Markdown Preview */
         #markdownPreview h1, 
         #markdownPreview h2, 
-        #markdownPreview h3 {
+        #markdownPreview h3,
+        #markdownPreview h4,
+        #markdownPreview h5,
+        #markdownPreview h6 {
             color: var(--secondary);
             margin: 20px 0 10px 0;
             border-bottom: 2px solid var(--primary);
             padding-bottom: 5px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            word-break: normal;
         }
         #markdownPreview h1 { font-size: 2em; }
         #markdownPreview h2 { font-size: 1.6em; }
         #markdownPreview h3 { font-size: 1.3em; }
         #markdownPreview p {
             margin: 10px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            word-break: normal;
         }
         #markdownPreview code {
             background: rgba(255, 255, 255, 0.1);
@@ -147,14 +169,31 @@
             border-radius: 4px;
             font-family: 'Fira Code', monospace;
             color: #ff6b6b;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            max-width: 100%;
+            word-break: normal;
         }
         #markdownPreview pre {
             background: #151523;
             padding: 15px;
             border-radius: 8px;
-            overflow-x: auto;
             margin: 15px 0;
             border-left: 4px solid var(--accent);
+            word-wrap: break-word;
+            max-width: 100%;
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: normal;
+        }
+        #markdownPreview pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: normal;
+            overflow-x: hidden;
         }
         #markdownPreview blockquote {
             border-left: 4px solid var(--primary);
@@ -164,17 +203,27 @@
             background: rgba(43, 91, 132, 0.1);
             padding: 10px 15px;
             border-radius: 0 8px 8px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            word-break: normal;
         }
         #markdownPreview table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
+            max-width: 100%;
+            word-wrap: break-word;
+            word-break: normal;
         }
         #markdownPreview th, 
         #markdownPreview td {
             padding: 10px;
             border: 1px solid var(--primary);
             text-align: left;
+            word-wrap: break-word;
+            max-width: 100%;
+            word-break: normal;
         }
         #markdownPreview th {
             background: var(--primary);
@@ -183,9 +232,14 @@
         #markdownPreview ul, 
         #markdownPreview ol {
             margin: 10px 0 10px 20px;
+            max-width: 100%;
         }
         #markdownPreview li {
             margin: 5px 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            word-break: normal;
         }
         .toolbar {
             display: flex;
@@ -271,8 +325,7 @@
             <button class="toolbar-btn" onclick="insertText('## ', '')">Título 2</button>
             <button class="toolbar-btn" onclick="insertText('### ', '')">Título 3</button>
             <button class="toolbar-btn" onclick="insertText('`', '`')">Código</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco Python</button>
-            <button class="toolbar-btn" onclick="insertText('``````')">Bloco JS</button>
+            <button class="toolbar-btn" onclick="insertText('```\n', '\n```')">Bloco de Código</button>
             <button class="toolbar-btn" onclick="insertText('- ', '')">Lista</button>
             <button class="toolbar-btn" onclick="insertText('1. ', '')">Lista Num.</button>
             <button class="toolbar-btn" onclick="insertText('> ', '')">Citação</button>
@@ -281,6 +334,7 @@
             <button class="toolbar-btn" onclick="insertText('$$', '$$')">LaTeX Bloco</button>
             <button class="toolbar-btn" onclick="insertText('$', '$')">LaTeX Inline</button>
             <button class="toolbar-btn" onclick="insertText('---\n', '')">Linha</button>
+            <button class="toolbar-btn" onclick="loadMarkdownFile()">Abrir</button>
 			<button class="toolbar-btn" onclick="saveMarkdown()">Salvar</button>
         </div>
 
@@ -326,29 +380,120 @@ Citação científica interessante..."></textarea>
         const preview = document.getElementById('markdownPreview');
         const charCount = document.getElementById('charCount');
 
-        function updatePreview() {
-            const markdownText = editor.value;
-            preview.innerHTML = marked.parse(markdownText);
-            charCount.textContent = `${markdownText.length} caracteres`;
+		// ✅ SOLUÇÃO CORRETA - Cole isso no seu código original
 
-            // Atualiza o preview do MathJax para renderização das fórmulas LaTeX
+		function updatePreview() {
+			let markdownText = editor.value;
+			
+			// ✅ PROCESSAR LINHA POR LINHA PARA PROTEGER PIPES EM CÓDIGO INLINE
+			const lines = markdownText.split('\n');
+			const processedLines = lines.map(line => {
+				// Detectar se é uma linha de tabela (contém | fora de backticks)
+				// Contar pipes fora de código
+				let inCode = false;
+				let pipeCount = 0;
+				
+				for (let i = 0; i < line.length; i++) {
+					if (line[i] === '`') {
+						inCode = !inCode;
+					} else if (line[i] === '|' && !inCode) {
+						pipeCount++;
+					}
+				}
+				
+				// Se tem pelo menos 1 pipe fora de código, é provável que seja tabela
+				if (pipeCount > 0) {
+					// Proteger pipes dentro de código usando barra invertida
+					let result = '';
+					let inBacktick = false;
+					
+					for (let i = 0; i < line.length; i++) {
+						if (line[i] === '`') {
+							inBacktick = !inBacktick;
+							result += line[i];
+						} else if (line[i] === '|' && inBacktick) {
+							// Usar barra invertida para escapar pipe dentro de código
+							result += '\\|';
+						} else {
+							result += line[i];
+						}
+					}
+					
+					return result;
+				}
+				
+				return line;
+			});
+			
+			markdownText = processedLines.join('\n');
+			
+			// Configuração do marked para melhor renderização
+			marked.setOptions({
+				breaks: true,
+				gfm: true
+			});
+			
+			preview.innerHTML = marked.parse(markdownText);
+			charCount.textContent = `${editor.value.length} caracteres`;
+
+			// Atualiza o preview do MathJax para renderização das fórmulas LaTeX
 			if (window.MathJax) {
 				setTimeout(() => {
 					MathJax.typesetPromise([preview]).catch((err) => console.error(err.message));
 				}, 0);
 			}
 
-            // Atualiza o highlight.js para realçar código no preview
-            preview.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
-        }
-
+			// Atualiza o highlight.js para realçar código no preview
+			preview.querySelectorAll('pre code').forEach((block) => {
+				hljs.highlightBlock(block);
+			});
+		}
         editor.addEventListener('input', updatePreview);
 
         window.onload = () => {
             updatePreview();
         };
+
+        // Função para indentação com Tab
+        function handleTabKey(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const text = editor.value;
+                
+                // Se há texto selecionado, indentar/dedentar múltiplas linhas
+                if (start !== end) {
+                    const before = text.substring(0, start);
+                    const selected = text.substring(start, end);
+                    const after = text.substring(end);
+                    
+                    // Verificar se é Shift+Tab (dedentar)
+                    if (e.shiftKey) {
+                        // Remover indentação (2 espaços ou tab)
+                        const dedented = selected.replace(/^( {2}|\t)/gm, '');
+                        editor.value = before + dedented + after;
+                        editor.setSelectionRange(start, start + dedented.length);
+                    } else {
+                        // Adicionar indentação (2 espaços)
+                        const indented = selected.replace(/^/gm, '  ');
+                        editor.value = before + indented + after;
+                        editor.setSelectionRange(start, start + indented.length);
+                    }
+                } else {
+                    // Apenas inserir 2 espaços na posição atual
+                    const spaces = '  ';
+                    editor.value = text.substring(0, start) + spaces + text.substring(end);
+                    editor.setSelectionRange(start + spaces.length, start + spaces.length);
+                }
+                
+                updatePreview();
+            }
+        }
+
+        // Adicionar evento de teclado para o Tab
+        editor.addEventListener('keydown', handleTabKey);
 
         function insertText(prefix, suffix) {
             const start = editor.selectionStart;
@@ -388,6 +533,34 @@ Citação científica interessante..."></textarea>
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		}
+
+        function loadMarkdownFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.md,.markdown,.txt';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editor.value = e.target.result;
+                    updatePreview();
+                    
+                    // Mostra mensagem de sucesso
+                    setTimeout(() => {
+                        alert(`Arquivo "${file.name}" carregado com sucesso!`);
+                    }, 100);
+                };
+                reader.onerror = function() {
+                    alert('Erro ao carregar o arquivo.');
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
     </script>
 </body>
 </html>
